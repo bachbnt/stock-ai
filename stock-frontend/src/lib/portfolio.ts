@@ -1,4 +1,7 @@
 import type { Transaction } from './supabase';
+import type { Locale } from './i18n';
+
+const localeTag: Record<Locale, string> = { vi: 'vi-VN', ja: 'ja-JP', en: 'en-US' };
 
 export interface Holding {
   symbol: string;
@@ -104,12 +107,12 @@ export function computeSummary(
   return { totalCost, totalValue, unrealizedPnl, unrealizedPct, realizedPnl };
 }
 
-export function fmtMoney(n: number): string {
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)} tỷ`;
-  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(2)} triệu`;
-  if (abs >= 1_000) return `${(n / 1_000).toFixed(0)} nghìn`;
-  return n.toLocaleString('vi-VN');
+export function fmtMoney(n: number, locale: Locale = 'vi'): string {
+  return new Intl.NumberFormat(localeTag[locale], {
+    notation: 'compact',
+    compactDisplay: 'short',
+    maximumFractionDigits: 2,
+  }).format(n);
 }
 
 export function fmtPrice(n: number): string {

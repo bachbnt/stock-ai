@@ -1,8 +1,9 @@
-export type Locale = 'vi' | 'ja';
+export type Locale = 'vi' | 'ja' | 'en';
 
 export const localeNames: Record<Locale, string> = {
   vi: 'Tiếng Việt',
   ja: '日本語',
+  en: 'English',
 };
 
 export const defaultLocale: Locale = 'vi';
@@ -45,12 +46,16 @@ const vi = {
   stock_list_col_price: 'Giá khớp',
   stock_list_col_change: 'Biến động',
   stock_list_col_volume: 'KL giao dịch',
+  stock_list_first: 'Trang đầu',
+  stock_list_last: 'Trang cuối',
   stock_list_prev: 'Trước',
   stock_list_next: 'Tiếp',
   stock_list_page: 'Trang {page} / {total}',
   stock_list_footer: 'Giá tự động làm mới sau 2 phút · Nhấp vào mã để xem biểu đồ',
 
   // Stock detail
+  detail_tab_chart: 'Biểu đồ',
+  detail_tab_company: 'Thông tin công ty',
   detail_chart_title: 'Giá đóng cửa 90 ngày gần nhất',
   detail_no_history: 'Không có dữ liệu lịch sử.',
   detail_close: 'Đóng cửa',
@@ -135,6 +140,10 @@ const vi = {
   chart_portfolio_title: 'Biến động giá trị danh mục (90 ngày)',
   chart_no_data: 'Không có dữ liệu lịch sử.',
   chart_value_label: 'Giá trị',
+
+  // Chart type toggle
+  chart_type_line: 'Đường',
+  chart_type_candle: 'Nến',
 } as const;
 
 export type TranslationKey = keyof typeof vi;
@@ -178,12 +187,16 @@ const ja: TranslationMap = {
   stock_list_col_price: '現在値',
   stock_list_col_change: '変動',
   stock_list_col_volume: '出来高',
+  stock_list_first: '最初のページ',
+  stock_list_last: '最後のページ',
   stock_list_prev: '前へ',
   stock_list_next: '次へ',
   stock_list_page: '{page} / {total} ページ',
   stock_list_footer: '価格は2分ごとに自動更新 · 銘柄をクリックしてチャートを表示',
 
   // Stock detail
+  detail_tab_chart: 'チャート',
+  detail_tab_company: '会社情報',
   detail_chart_title: '直近90日間の終値',
   detail_no_history: '履歴データがありません。',
   detail_close: '終値',
@@ -268,6 +281,148 @@ const ja: TranslationMap = {
   chart_portfolio_title: 'ポートフォリオ評価額の推移（90日）',
   chart_no_data: '履歴データがありません。',
   chart_value_label: '評価額',
+
+  // Chart type toggle
+  chart_type_line: '折れ線',
+  chart_type_candle: 'ローソク足',
 };
 
-export const translations: Record<Locale, TranslationMap> = { vi, ja };
+const en: TranslationMap = {
+  // Navbar
+  nav_market: 'Market',
+  nav_portfolio: 'Portfolio',
+  nav_login: 'Login',
+  nav_logout: 'Logout',
+
+  // Auth modal
+  auth_login: 'Login',
+  auth_signup: 'Sign up',
+  auth_email: 'Email',
+  auth_password: 'Password',
+  auth_email_invalid: 'Invalid email address',
+  auth_password_required: 'Password is required',
+  auth_password_min: 'Password must be at least 8 characters',
+  auth_password_letter: 'Password must contain at least 1 letter',
+  auth_password_digit: 'Password must contain at least 1 digit',
+  auth_signup_success: 'Signed up! Check your email to confirm your account.',
+  auth_generic_error: 'An error occurred',
+  auth_processing: 'Processing...',
+  auth_no_account: "Don't have an account?",
+  auth_has_account: 'Already have an account?',
+  auth_password_hint: 'At least 8 characters with letters and numbers',
+
+  // Stock list
+  stock_list_title: 'Stock List',
+  stock_list_loading: 'Loading...',
+  stock_list_count: '{n} symbols',
+  stock_list_updated: 'Updated at {time}',
+  stock_list_refresh: 'Refresh',
+  stock_list_search: 'Search by symbol or company name...',
+  stock_list_error: 'Unable to load data. Check your connection to the server.',
+  stock_list_col_no: '#',
+  stock_list_col_symbol: 'Symbol',
+  stock_list_col_company: 'Company',
+  stock_list_col_price: 'Price',
+  stock_list_col_change: 'Change',
+  stock_list_col_volume: 'Volume',
+  stock_list_first: 'First page',
+  stock_list_last: 'Last page',
+  stock_list_prev: 'Prev',
+  stock_list_next: 'Next',
+  stock_list_page: 'Page {page} / {total}',
+  stock_list_footer: 'Prices auto-refresh every 2 minutes · Click a symbol to view chart',
+
+  // Stock detail
+  detail_tab_chart: 'Chart',
+  detail_tab_company: 'Company Info',
+  detail_chart_title: 'Closing price — last 90 days',
+  detail_no_history: 'No historical data available.',
+  detail_close: 'Close',
+  detail_tab_info: 'Info',
+  detail_tab_business: 'Business',
+  detail_tab_history: 'History',
+  detail_field_exchange: 'Exchange',
+  detail_field_company_type: 'Company type',
+  detail_field_listing_date: 'Listing date',
+  detail_field_founded_date: 'Founded date',
+  detail_field_charter_capital: 'Charter capital (B)',
+  detail_field_employees: 'Employees',
+  detail_field_ceo: 'Chairman',
+  detail_field_ceo_title: 'Title',
+  detail_field_inspector: 'Inspector',
+  detail_field_auditor: 'Auditor',
+  detail_field_tax_id: 'Tax ID',
+  detail_field_phone: 'Phone',
+  detail_field_fax: 'Fax',
+  detail_field_email: 'Email',
+  detail_field_website: 'Website',
+  detail_field_address: 'Address',
+  detail_field_branches: 'Branches / Offices',
+
+  // Portfolio
+  portfolio_title: 'My Portfolio',
+  portfolio_add_tx: 'Add transaction',
+  portfolio_tab_holdings: 'Holdings ({n})',
+  portfolio_tab_transactions: 'Transaction history ({n})',
+  portfolio_total_cost: 'Total cost',
+  portfolio_total_value: 'Current value',
+  portfolio_unrealized_pnl: 'Unrealized P&L',
+  portfolio_realized_pnl: 'Realized P&L',
+
+  // Holdings table
+  holdings_empty: 'No holdings yet. Add a buy transaction to get started.',
+  holdings_col_symbol: 'Symbol',
+  holdings_col_qty: 'Shares',
+  holdings_col_avg_cost: 'Avg cost',
+  holdings_col_current_price: 'Current price',
+  holdings_col_value: 'Value',
+  holdings_col_pnl: 'P&L',
+  holdings_col_pct: '%',
+
+  // Transaction list
+  tx_list_empty: 'No transactions yet.',
+  tx_list_col_date: 'Date',
+  tx_list_col_symbol: 'Symbol',
+  tx_list_col_type: 'Type',
+  tx_list_col_qty: 'Shares',
+  tx_list_col_price: 'Price',
+  tx_list_col_fee: 'Fee',
+  tx_list_col_value: 'Value',
+  tx_list_col_note: 'Note',
+  tx_type_buy: 'Buy',
+  tx_type_sell: 'Sell',
+  tx_delete_confirm: 'Delete this transaction?',
+
+  // Transaction modal
+  tx_modal_title_add: 'Add transaction',
+  tx_modal_title_edit: 'Edit transaction',
+  tx_modal_symbol_label: 'Stock symbol',
+  tx_modal_symbol_placeholder: 'Search symbol...',
+  tx_modal_qty_label: 'Quantity',
+  tx_modal_qty_max: '(max {max})',
+  tx_modal_price_label: 'Price (VND)',
+  tx_modal_price_market: '· market price',
+  tx_modal_fee_label: 'Fee (VND)',
+  tx_modal_date_label: 'Date',
+  tx_modal_note_label: 'Note (optional)',
+  tx_modal_saving: 'Saving...',
+  tx_modal_btn_update: 'Update',
+  tx_modal_btn_add_buy: 'Add buy order',
+  tx_modal_btn_add_sell: 'Add sell order',
+  tx_modal_err_symbol: 'Select a stock symbol',
+  tx_modal_err_qty: 'Quantity must be > 0',
+  tx_modal_err_price: 'Price must be > 0',
+  tx_modal_err_max_qty: 'You can only sell up to {max} shares',
+  tx_modal_err_generic: 'An error occurred',
+
+  // Portfolio chart
+  chart_portfolio_title: 'Portfolio value over time (90 days)',
+  chart_no_data: 'No historical data available.',
+  chart_value_label: 'Value',
+
+  // Chart type toggle
+  chart_type_line: 'Line',
+  chart_type_candle: 'Candle',
+};
+
+export const translations: Record<Locale, TranslationMap> = { vi, ja, en };

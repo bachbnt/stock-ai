@@ -8,8 +8,8 @@ function pnlColor(v: number) {
   return '#858ca2';
 }
 
-function fmtPnl(n: number) {
-  return `${n > 0 ? '+' : ''}${fmtMoney(n)}`;
+function fmtPnl(n: number, locale: Parameters<typeof fmtMoney>[1]) {
+  return `${n > 0 ? '+' : ''}${fmtMoney(n, locale)}`;
 }
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function HoldingsTable({ holdings, onSelectSymbol }: Props) {
-  const { t } = useT();
+  const { t, locale } = useT();
 
   if (holdings.length === 0) {
     return (
@@ -64,10 +64,10 @@ export function HoldingsTable({ holdings, onSelectSymbol }: Props) {
                   {fmtPrice(h.currentPrice)}
                 </td>
                 <td className="px-4 py-3 text-right text-sm text-white">
-                  {h.currentValue > 0 ? fmtMoney(h.currentValue) : '—'}
+                  {h.currentValue > 0 ? fmtMoney(h.currentValue, locale) : '—'}
                 </td>
                 <td className="px-4 py-3 text-right text-sm font-semibold" style={{ color: pnlColor(h.unrealizedPnl) }}>
-                  {h.currentValue > 0 ? fmtPnl(h.unrealizedPnl) : '—'}
+                  {h.currentValue > 0 ? fmtPnl(h.unrealizedPnl, locale) : '—'}
                 </td>
                 <td className="px-4 py-3 text-right text-sm font-semibold" style={{ color: pnlColor(h.unrealizedPct) }}>
                   {h.currentValue > 0

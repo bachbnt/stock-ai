@@ -54,7 +54,7 @@ function SummaryCard({
 type PortfolioTab = 'holdings' | 'transactions';
 
 export function Portfolio() {
-  const { t } = useT();
+  const { t, locale } = useT();
   const { user } = useAuth();
   const { data: transactions = [], isLoading } = useTransactions(user?.id ?? null);
   const [showAdd, setShowAdd] = useState(false);
@@ -98,17 +98,17 @@ export function Portfolio() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <SummaryCard
           label={t('portfolio_total_cost')}
-          value={fmtMoney(summary.totalCost)}
+          value={fmtMoney(summary.totalCost, locale)}
           icon={<Wallet size={16} color="#858ca2" />}
         />
         <SummaryCard
           label={t('portfolio_total_value')}
-          value={fmtMoney(summary.totalValue)}
+          value={fmtMoney(summary.totalValue, locale)}
           icon={<BarChart2 size={16} color="#3861fb" />}
         />
         <SummaryCard
           label={t('portfolio_unrealized_pnl')}
-          value={`${summary.unrealizedPnl > 0 ? '+' : ''}${fmtMoney(summary.unrealizedPnl)}`}
+          value={`${summary.unrealizedPnl > 0 ? '+' : ''}${fmtMoney(summary.unrealizedPnl, locale)}`}
           sub={`${summary.unrealizedPct > 0 ? '+' : ''}${summary.unrealizedPct.toFixed(2)}%`}
           color={unrealizedColor}
           icon={
@@ -119,7 +119,7 @@ export function Portfolio() {
         />
         <SummaryCard
           label={t('portfolio_realized_pnl')}
-          value={`${realizedPnl > 0 ? '+' : ''}${fmtMoney(realizedPnl)}`}
+          value={`${realizedPnl > 0 ? '+' : ''}${fmtMoney(realizedPnl, locale)}`}
           color={realizedColor}
           icon={
             realizedPnl >= 0

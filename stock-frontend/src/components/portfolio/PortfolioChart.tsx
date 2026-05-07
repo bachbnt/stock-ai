@@ -8,6 +8,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import type { Holding } from '../../lib/portfolio';
+import { fmtMoney } from '../../lib/portfolio';
 import { usePortfolioHistory } from '../../hooks/usePortfolio';
 import { useT } from '../../contexts/I18nContext';
 
@@ -16,7 +17,7 @@ interface Props {
 }
 
 export function PortfolioChart({ holdings }: Props) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const { data, isLoading } = usePortfolioHistory(holdings);
 
   if (holdings.length === 0) return null;
@@ -58,12 +59,7 @@ export function PortfolioChart({ holdings }: Props) {
             axisLine={false}
             width={65}
             domain={[minVal * 0.995, maxVal * 1.005]}
-            tickFormatter={(v: number) => {
-              if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}tỷ`;
-              if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}tr`;
-              if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
-              return String(v);
-            }}
+            tickFormatter={(v: number) => fmtMoney(v, locale)}
           />
           <Tooltip
             contentStyle={{
@@ -74,13 +70,7 @@ export function PortfolioChart({ holdings }: Props) {
               fontSize: 12,
             }}
             labelFormatter={(v: string) => `${v.slice(8, 10)}/${v.slice(5, 7)}`}
-            formatter={(value: number) => {
-              const abs = Math.abs(value);
-              const s = abs >= 1_000_000_000 ? `${(value / 1_000_000_000).toFixed(2)} tỷ`
-                : abs >= 1_000_000 ? `${(value / 1_000_000).toFixed(2)} triệu`
-                : `${(value / 1_000).toFixed(0)} nghìn`;
-              return [s, t('chart_value_label')];
-            }}
+            formatter={(value: number) => [fmtMoney(value, locale), t('chart_value_label')]}
           />
           <Area
             type="monotone"

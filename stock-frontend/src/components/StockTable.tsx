@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { RefreshCw, Search, ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, TrendingUp, TrendingDown, Pin } from 'lucide-react';
 import { useStockList, useStockQuotes } from '../hooks/useStock';
 import { useT } from '../contexts/I18nContext';
 import type { StockItem, QuoteData } from '../lib/api';
@@ -20,19 +20,25 @@ function fmtVol(n?: number): string {
   return String(n);
 }
 
+function priceColor(pct?: number): string {
+  if (pct == null || pct === 0) return '#f0b90b';
+  return pct > 0 ? '#16c784' : '#ea3943';
+}
+
 function PriceCell({ value, pct }: { value?: number; pct?: number }) {
   if (value == null || value === 0) return <span className="text-[#858ca2]">—</span>;
-  const color = pct == null ? '#fff' : pct > 0 ? '#16c784' : pct < 0 ? '#ea3943' : '#f0b429';
-  return <span className="font-semibold text-sm" style={{ color }}>{fmt(value)}</span>;
+  return <span className="font-semibold text-sm" style={{ color: priceColor(pct) }}>{fmt(value)}</span>;
 }
 
 type ChangeMode = 'pct' | 'price';
 
 function ChangeCell({ pct, close, mode }: { pct?: number; close?: number; mode: ChangeMode }) {
-  if (pct == null) return <span className="text-[#858ca2]">—</span>;
+  const hasPrice = close != null && close > 0;
+  if (!hasPrice) return <span style={{ color: '#858ca2' }}>—</span>;
+  if (pct == null) return <span style={{ color: '#f0b90b' }}>—</span>;
   const isUp = pct > 0;
   const isFlat = pct === 0;
-  const color = isFlat ? '#858ca2' : isUp ? '#16c784' : '#ea3943';
+  const color = isFlat ? '#f0b90b' : isUp ? '#16c784' : '#ea3943';
 
   let display: string;
   if (mode === 'price' && close) {
@@ -79,26 +85,45 @@ interface PaginationProps {
 
 function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
   const { t } = useT();
+  const btnStyle = { backgroundColor: '#1a1b1e', color: '#858ca2', border: '1px solid #2a2b2e' };
   return (
-    <div className="flex items-center justify-center gap-3 mt-4">
+    <div className="flex items-center justify-center gap-2 mt-4">
+      <button
+        onClick={() => onPageChange(1)}
+        disabled={page === 1}
+        className="flex items-center p-1.5 rounded-lg disabled:opacity-30"
+        style={btnStyle}
+        title={t('stock_list_first')}
+      >
+        <ChevronsLeft size={14} />
+      </button>
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
         className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-30"
-        style={{ backgroundColor: '#1a1b1e', color: '#858ca2', border: '1px solid #2a2b2e' }}
+        style={btnStyle}
       >
         <ChevronLeft size={14} /> {t('stock_list_prev')}
       </button>
-      <span className="text-sm font-medium" style={{ color: '#858ca2' }}>
+      <span className="text-sm font-medium px-1" style={{ color: '#858ca2' }}>
         {t('stock_list_page', { page: String(page), total: String(totalPages) })}
       </span>
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
         className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-30"
-        style={{ backgroundColor: '#1a1b1e', color: '#858ca2', border: '1px solid #2a2b2e' }}
+        style={btnStyle}
       >
         {t('stock_list_next')} <ChevronRight size={14} />
+      </button>
+      <button
+        onClick={() => onPageChange(totalPages)}
+        disabled={page >= totalPages}
+        className="flex items-center p-1.5 rounded-lg disabled:opacity-30"
+        style={btnStyle}
+        title={t('stock_list_last')}
+      >
+        <ChevronsRight size={14} />
       </button>
     </div>
   );
@@ -108,6 +133,7 @@ function QuoteRow({
   stock,
   idx,
   page,
+  pinned = false,
   quote,
   quoteLoading,
   changeMode,
@@ -116,6 +142,7 @@ function QuoteRow({
   stock: StockItem;
   idx: number;
   page: number;
+  pinned?: boolean;
   quote?: QuoteData;
   quoteLoading: boolean;
   changeMode: ChangeMode;
@@ -131,7 +158,9 @@ function QuoteRow({
       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
     >
       <td className="px-4 py-3 text-[#858ca2] text-sm">
-        {(page - 1) * PAGE_SIZE + idx + 1}
+        {pinned
+          ? <Pin size={12} style={{ color: '#3861fb' }} />
+          : (page - 1) * PAGE_SIZE + idx + 1}
       </td>
       <td className="px-4 py-3">
         <span className="font-bold text-white text-sm">{stock.symbol}</span>
@@ -173,27 +202,32 @@ export function StockTable() {
 
   const { data: stocks, isLoading, isError, refetch, isFetching, dataUpdatedAt } = useStockList();
 
+  const pinnedStocks = useMemo(() => {
+    if (!stocks || search.trim()) return [];
+    return stocks.filter((s) => PINNED.includes(s.symbol));
+  }, [stocks, search]);
+
   const filtered = useMemo(() => {
     if (!stocks) return [];
     const q = search.trim().toLowerCase();
-    const list = q
-      ? stocks.filter(
-          (s) =>
-            s.symbol.toLowerCase().includes(q) ||
-            (s.organ_name ?? '').toLowerCase().includes(q),
-        )
-      : stocks;
-    if (q) return list;
-    const pinned = list.filter((s) => PINNED.includes(s.symbol));
-    const rest = list.filter((s) => !PINNED.includes(s.symbol));
-    return [...pinned, ...rest];
+    if (q) {
+      return stocks.filter(
+        (s) =>
+          s.symbol.toLowerCase().includes(q) ||
+          (s.organ_name ?? '').toLowerCase().includes(q),
+      );
+    }
+    return stocks.filter((s) => !PINNED.includes(s.symbol));
   }, [stocks, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageStocks = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const pageSymbols = useMemo(() => pageStocks.map((s) => s.symbol), [pageStocks]);
 
-  const { data: quotes, isLoading: quotesLoading } = useStockQuotes(pageSymbols);
+  const visibleSymbols = useMemo(
+    () => [...pinnedStocks.map((s) => s.symbol), ...pageStocks.map((s) => s.symbol)],
+    [pinnedStocks, pageStocks],
+  );
+  const { data: quotes, isLoading: quotesLoading } = useStockQuotes(visibleSymbols);
 
   const lastUpdated = dataUpdatedAt
     ? new Date(dataUpdatedAt).toLocaleTimeString('vi-VN', {
@@ -220,7 +254,7 @@ export function StockTable() {
           <h1 className="text-xl font-bold text-white">{t('stock_list_title')}</h1>
           <p className="text-sm text-[#858ca2] mt-0.5">
             {stocks
-              ? t('stock_list_count', { n: filtered.length.toLocaleString() })
+              ? t('stock_list_count', { n: (filtered.length + pinnedStocks.length).toLocaleString() })
               : t('stock_list_loading')}
           </p>
         </div>
@@ -301,6 +335,19 @@ export function StockTable() {
               </tr>
             </thead>
             <tbody>
+              {pinnedStocks.map((stock) => (
+                <QuoteRow
+                  key={stock.symbol}
+                  stock={stock}
+                  idx={0}
+                  page={1}
+                  pinned
+                  quote={quotes?.[stock.symbol]}
+                  quoteLoading={quotesLoading}
+                  changeMode={changeMode}
+                  onSelect={handleSelect}
+                />
+              ))}
               {isLoading
                 ? [...Array(PAGE_SIZE)].map((_, i) => <SkeletonRow key={i} />)
                 : pageStocks.map((stock, idx) => (

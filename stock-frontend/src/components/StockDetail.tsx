@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useStockHistory, useCompanyInfo } from '../hooks/useStock';
 import { useT } from '../contexts/I18nContext';
+import { CandleChart } from './CandleChart';
+import { quoteColor } from '../lib/colors';
 import type { CompanyInfo } from '../lib/api';
 import {
   ResponsiveContainer,
@@ -26,6 +28,8 @@ function formatVND(n: number): string {
 
 export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
   const { t } = useT();
+  const [mainTab, setMainTab] = useState<'chart' | 'company'>('chart');
+  const [chartType, setChartType] = useState<'line' | 'candle'>('line');
   const { data: history, isLoading: histLoading } = useStockHistory(symbol);
   const { data: company, isLoading: compLoading } = useCompanyInfo(symbol);
 
@@ -34,8 +38,12 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
   const priceDiff = lastPrice != null && prevPrice != null ? lastPrice - prevPrice : null;
   const pricePct =
     priceDiff != null && prevPrice ? (priceDiff / prevPrice) * 100 : null;
-  const isUp = priceDiff != null ? priceDiff >= 0 : null;
-  const priceColor = isUp === null ? '#858ca2' : isUp ? '#16c784' : '#ea3943';
+  const detailPriceColor = quoteColor(lastPrice != null, priceDiff);
+
+  const mainTabs = [
+    { id: 'chart' as const, label: t('detail_tab_chart') },
+    { id: 'company' as const, label: t('detail_tab_company') },
+  ];
 
   return (
     <div
@@ -44,13 +52,13 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="relative w-full max-w-2xl rounded-2xl border shadow-2xl overflow-y-auto max-h-[90vh]"
+        className="relative w-full max-w-4xl rounded-2xl border shadow-2xl overflow-y-auto max-h-[90vh]"
         style={{ backgroundColor: '#1a1b1e', borderColor: '#2a2b2e' }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div
-          className="flex items-center justify-between p-5 border-b"
-          style={{ borderColor: '#2a2b2e' }}
+          className="flex items-center justify-between px-5 pt-5 pb-3"
         >
           <div>
             <div className="flex items-center gap-2">
@@ -66,88 +74,143 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
             </div>
             <p className="text-sm text-[#858ca2]">{name}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg transition-colors hover:bg-[#22232a] text-[#858ca2] hover:text-white"
-          >
-            <X size={20} />
-          </button>
+
+          <div className="flex items-center gap-3">
+            {lastPrice != null && (
+              <div className="text-right">
+                <p className="text-xl font-bold" style={{ color: detailPriceColor }}>{formatVND(lastPrice)}</p>
+                {priceDiff != null && pricePct != null && (
+                  <p className="text-xs font-semibold" style={{ color: detailPriceColor }}>
+                    {priceDiff > 0 ? '+' : ''}
+                    {Math.round(priceDiff * 1000).toLocaleString()} ({priceDiff > 0 ? '+' : ''}
+                    {pricePct.toFixed(2)}%)
+                  </p>
+                )}
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg transition-colors hover:bg-[#22232a] text-[#858ca2] hover:text-white"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
-        <div className="p-5 space-y-5">
-          {lastPrice != null && (
-            <div className="flex items-end gap-3">
-              <span className="text-3xl font-bold text-white">{formatVND(lastPrice)}</span>
-              {priceDiff != null && pricePct != null && (
-                <span className="text-sm font-semibold mb-1" style={{ color: priceColor }}>
-                  {isUp ? '+' : ''}
-                  {Math.round(priceDiff * 1000).toLocaleString('vi-VN')} ({isUp ? '+' : ''}
-                  {pricePct.toFixed(2)}%)
-                </span>
+        {/* Main tabs */}
+        <div className="flex border-b px-5" style={{ borderColor: '#2a2b2e' }}>
+          {mainTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setMainTab(tab.id)}
+              className="px-4 py-2 text-sm font-medium transition-colors"
+              style={{
+                color: mainTab === tab.id ? '#fff' : '#858ca2',
+                borderBottom: mainTab === tab.id ? '2px solid #3861fb' : '2px solid transparent',
+                marginBottom: -1,
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-5">
+          {/* Chart tab */}
+          {mainTab === 'chart' && (
+            <div>
+              {histLoading ? (
+                <div className="skeleton h-64 rounded-xl" />
+              ) : history && history.length > 0 ? (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-[#858ca2]">{t('detail_chart_title')}</p>
+                    <div
+                      className="flex rounded-lg overflow-hidden border text-xs"
+                      style={{ borderColor: '#2a2b2e' }}
+                    >
+                      {(['line', 'candle'] as const).map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setChartType(type)}
+                          className="px-3 py-1 transition-colors"
+                          style={{
+                            backgroundColor: chartType === type ? '#3861fb' : '#22232a',
+                            color: chartType === type ? '#fff' : '#858ca2',
+                          }}
+                        >
+                          {t(type === 'line' ? 'chart_type_line' : 'chart_type_candle')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {chartType === 'line' ? (
+                    <ResponsiveContainer width="100%" height={360}>
+                      <LineChart data={history} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2a2b2e" />
+                        <XAxis
+                          dataKey="time"
+                          tick={{ fill: '#858ca2', fontSize: 10 }}
+                          tickLine={false}
+                          axisLine={false}
+                          interval="preserveStartEnd"
+                          tickFormatter={(v: string) => `${v.slice(8, 10)}/${v.slice(5, 7)}`}
+                        />
+                        <YAxis
+                          tick={{ fill: '#858ca2', fontSize: 10 }}
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(v: number) => formatVND(v)}
+                          width={60}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#22232a',
+                            border: '1px solid #2a2b2e',
+                            borderRadius: 8,
+                            color: '#fff',
+                            fontSize: 12,
+                          }}
+                          labelFormatter={(v: string) => `${v.slice(8, 10)}/${v.slice(5, 7)}`}
+                          formatter={(value: number | string | (number | string)[]) => {
+                            const num = typeof value === 'number' ? value : 0;
+                            return [formatVND(num), t('detail_close')];
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="close"
+                          stroke="#3861fb"
+                          dot={false}
+                          strokeWidth={2}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <CandleChart data={history} height={500} />
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-[#858ca2]">{t('detail_no_history')}</p>
               )}
             </div>
           )}
 
-          {histLoading ? (
-            <div className="skeleton h-48 rounded-xl" />
-          ) : history && history.length > 0 ? (
+          {/* Company tab */}
+          {mainTab === 'company' && (
             <div>
-              <p className="text-xs text-[#858ca2] mb-2">{t('detail_chart_title')}</p>
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChart data={history} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2b2e" />
-                  <XAxis
-                    dataKey="time"
-                    tick={{ fill: '#858ca2', fontSize: 10 }}
-                    tickLine={false}
-                    axisLine={false}
-                    interval="preserveStartEnd"
-                    tickFormatter={(v: string) => `${v.slice(8, 10)}/${v.slice(5, 7)}`}
-                  />
-                  <YAxis
-                    tick={{ fill: '#858ca2', fontSize: 10 }}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v: number) => formatVND(v)}
-                    width={60}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#22232a',
-                      border: '1px solid #2a2b2e',
-                      borderRadius: 8,
-                      color: '#fff',
-                      fontSize: 12,
-                    }}
-                    labelFormatter={(v: string) => `${v.slice(8, 10)}/${v.slice(5, 7)}`}
-                    formatter={(value: number | string | (number | string)[]) => {
-                      const num = typeof value === 'number' ? value : 0;
-                      return [formatVND(num), t('detail_close')];
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="close"
-                    stroke="#3861fb"
-                    dot={false}
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {compLoading ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="skeleton h-14 rounded-lg" />
+                  ))}
+                </div>
+              ) : company ? (
+                <CompanyInfoSection company={company} />
+              ) : null}
             </div>
-          ) : (
-            <p className="text-sm text-[#858ca2]">{t('detail_no_history')}</p>
           )}
-
-          {compLoading ? (
-            <div className="grid grid-cols-2 gap-3">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="skeleton h-14 rounded-lg" />
-              ))}
-            </div>
-          ) : company ? (
-            <CompanyInfoSection company={company} />
-          ) : null}
         </div>
       </div>
     </div>
