@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useStockHistory, useCompanyInfo } from '../hooks/useStock';
 import type { CompanyInfo } from '../lib/api';
@@ -142,12 +143,12 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
           {/* Company info */}
           {compLoading ? (
             <div className="grid grid-cols-2 gap-3">
-              {[...Array(4)].map((_, i) => (
+              {[...Array(6)].map((_, i) => (
                 <div key={i} className="skeleton h-14 rounded-lg" />
               ))}
             </div>
           ) : company ? (
-            <CompanyInfoGrid company={company} />
+            <CompanyInfoSection company={company} />
           ) : null}
         </div>
       </div>
@@ -155,29 +156,82 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
   );
 }
 
+type TabId = 'info' | 'business' | 'history';
+
+function CompanyInfoSection({ company }: { company: CompanyInfo }) {
+  const [tab, setTab] = useState<TabId>('info');
+
+  const hasBusiness = !!(company.business_model && String(company.business_model).trim());
+  const hasHistory = !!(company.history && String(company.history).trim());
+
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'info', label: 'Thông tin' },
+    ...(hasBusiness ? [{ id: 'business' as const, label: 'Mô hình KD' }] : []),
+    ...(hasHistory ? [{ id: 'history' as const, label: 'Lịch sử' }] : []),
+  ];
+
+  return (
+    <div>
+      <div className="flex gap-0 mb-3 border-b" style={{ borderColor: '#2a2b2e' }}>
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className="px-4 py-2 text-xs font-medium transition-colors"
+            style={{
+              color: tab === t.id ? '#fff' : '#858ca2',
+              borderBottom: tab === t.id ? '2px solid #3861fb' : '2px solid transparent',
+              marginBottom: -1,
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'info' && <CompanyInfoGrid company={company} />}
+      {tab === 'business' && hasBusiness && (
+        <LongTextBlock text={String(company.business_model)} />
+      )}
+      {tab === 'history' && hasHistory && (
+        <LongTextBlock text={String(company.history)} />
+      )}
+    </div>
+  );
+}
+
 function CompanyInfoGrid({ company }: { company: CompanyInfo }) {
   const fields = [
     { label: 'Sàn giao dịch', key: 'exchange' },
+    { label: 'Loại công ty', key: 'company_type' },
     { label: 'Ngày niêm yết', key: 'listing_date' },
     { label: 'Ngày thành lập', key: 'founded_date' },
     { label: 'Vốn điều lệ (tỷ)', key: 'charter_capital' },
     { label: 'Số nhân viên', key: 'number_of_employees' },
-    { label: 'Tổng giám đốc', key: 'ceo_name' },
-    { label: 'Website', key: 'website' },
+    { label: 'Chủ tịch HĐQT', key: 'ceo_name' },
+    { label: 'Chức danh', key: 'ceo_position' },
+    { label: 'Kiểm soát viên', key: 'inspector_name' },
+    { label: 'Đơn vị kiểm toán', key: 'auditor' },
+    { label: 'Mã số thuế', key: 'tax_id' },
+    { label: 'Điện thoại', key: 'phone' },
+    { label: 'Fax', key: 'fax' },
     { label: 'Email', key: 'email' },
+    { label: 'Website', key: 'website' },
   ];
 
-  const entries = fields
+  const gridEntries = fields
     .map((f) => ({ label: f.label, value: company[f.key] }))
     .filter((e) => e.value != null && e.value !== '');
 
-  if (entries.length === 0) return null;
+  const address = company.address ? String(company.address) : null;
+  const branches = company.branches ? String(company.branches).trim() : null;
+
+  if (gridEntries.length === 0 && !address && !branches) return null;
 
   return (
-    <div>
-      <p className="text-xs text-[#858ca2] mb-2">Thông tin công ty</p>
+    <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        {entries.map((e) => (
+        {gridEntries.map((e) => (
           <div
             key={e.label}
             className="rounded-lg p-3 border"
@@ -188,6 +242,37 @@ function CompanyInfoGrid({ company }: { company: CompanyInfo }) {
           </div>
         ))}
       </div>
+
+      {address && (
+        <div
+          className="rounded-lg p-3 border"
+          style={{ backgroundColor: '#0d0e11', borderColor: '#2a2b2e' }}
+        >
+          <p className="text-xs text-[#858ca2] mb-1">Địa chỉ</p>
+          <p className="text-sm font-semibold text-white">{address}</p>
+        </div>
+      )}
+
+      {branches && (
+        <div
+          className="rounded-lg p-3 border"
+          style={{ backgroundColor: '#0d0e11', borderColor: '#2a2b2e' }}
+        >
+          <p className="text-xs text-[#858ca2] mb-1">Chi nhánh / VPĐD</p>
+          <p className="text-sm text-white whitespace-pre-line leading-relaxed">{branches}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LongTextBlock({ text }: { text: string }) {
+  return (
+    <div
+      className="rounded-lg p-4 border"
+      style={{ backgroundColor: '#0d0e11', borderColor: '#2a2b2e' }}
+    >
+      <p className="text-sm text-[#c8ccd8] whitespace-pre-line leading-relaxed">{text.trim()}</p>
     </div>
   );
 }
