@@ -81,7 +81,7 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
               {priceDiff != null && pricePct != null && (
                 <span className="text-sm font-semibold mb-1" style={{ color: priceColor }}>
                   {isUp ? '+' : ''}
-                  {formatVND(priceDiff)} ({isUp ? '+' : ''}
+                  {Math.round(priceDiff * 1000).toLocaleString('vi-VN')} ({isUp ? '+' : ''}
                   {pricePct.toFixed(2)}%)
                 </span>
               )}
@@ -166,7 +166,7 @@ function CompanyInfoSection({ company }: { company: CompanyInfo }) {
 
   const tabs: { id: TabId; label: string }[] = [
     { id: 'info', label: 'Thông tin' },
-    ...(hasBusiness ? [{ id: 'business' as const, label: 'Mô hình KD' }] : []),
+    ...(hasBusiness ? [{ id: 'business' as const, label: 'Kinh doanh' }] : []),
     ...(hasHistory ? [{ id: 'history' as const, label: 'Lịch sử' }] : []),
   ];
 

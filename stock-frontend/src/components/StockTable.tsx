@@ -19,22 +19,32 @@ function fmtVol(n?: number): string {
   return String(n);
 }
 
-function PriceCell({ value }: { value?: number }) {
+function PriceCell({ value, pct }: { value?: number; pct?: number }) {
   if (value == null || value === 0) return <span className="text-[#858ca2]">—</span>;
-  return <span className="font-semibold text-white text-sm">{fmt(value)}</span>;
+  const color = pct == null ? '#fff' : pct > 0 ? '#16c784' : pct < 0 ? '#ea3943' : '#f0b429';
+  return <span className="font-semibold text-sm" style={{ color }}>{fmt(value)}</span>;
 }
 
-function ChangeCell({ pct }: { pct?: number }) {
+type ChangeMode = 'pct' | 'price';
+
+function ChangeCell({ pct, close, mode }: { pct?: number; close?: number; mode: ChangeMode }) {
   if (pct == null) return <span className="text-[#858ca2]">—</span>;
   const isUp = pct > 0;
   const isFlat = pct === 0;
   const color = isFlat ? '#858ca2' : isUp ? '#16c784' : '#ea3943';
+
+  let display: string;
+  if (mode === 'price' && close) {
+    const priceChange = Math.round(close * pct / 100);
+    display = `${isUp ? '+' : ''}${priceChange.toLocaleString('vi-VN')}`;
+  } else {
+    display = `${isUp ? '+' : ''}${pct.toFixed(2)}%`;
+  }
+
   return (
     <div className="flex items-center justify-end gap-1" style={{ color }}>
       {!isFlat && (isUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />)}
-      <span className="font-semibold text-sm">
-        {isUp ? '+' : ''}{pct.toFixed(2)}%
-      </span>
+      <span className="font-semibold text-sm">{display}</span>
     </div>
   );
 }
@@ -53,8 +63,6 @@ function SkeletonRow() {
       <td className="px-4 py-3"><div className="skeleton h-3.5 rounded" style={{ width: 28 }} /></td>
       <td className="px-4 py-3"><div className="skeleton h-3.5 rounded" style={{ width: 48 }} /></td>
       <td className="px-4 py-3"><div className="skeleton h-3.5 rounded" style={{ width: 220 }} /></td>
-      <SkeletonCell />
-      <SkeletonCell />
       <SkeletonCell />
       <SkeletonCell />
       <SkeletonCell />
@@ -100,6 +108,7 @@ function QuoteRow({
   page,
   quote,
   quoteLoading,
+  changeMode,
   onSelect,
 }: {
   stock: StockItem;
@@ -107,6 +116,7 @@ function QuoteRow({
   page: number;
   quote?: QuoteData;
   quoteLoading: boolean;
+  changeMode: ChangeMode;
   onSelect: (s: StockItem) => void;
 }) {
   return (
@@ -140,19 +150,9 @@ function QuoteRow({
         </>
       ) : (
         <>
-          <td className="px-4 py-3 text-right"><PriceCell value={quote?.close} /></td>
+          <td className="px-4 py-3 text-right"><PriceCell value={quote?.close} pct={quote?.change_pct} /></td>
           <td className="px-4 py-3 text-right">
-            <span className="text-sm" style={{ color: '#16c784' }}>
-              {quote?.high ? fmt(quote.high) : '—'}
-            </span>
-          </td>
-          <td className="px-4 py-3 text-right">
-            <span className="text-sm" style={{ color: '#ea3943' }}>
-              {quote?.low ? fmt(quote.low) : '—'}
-            </span>
-          </td>
-          <td className="px-4 py-3 text-right">
-            <ChangeCell pct={quote?.change_pct} />
+            <ChangeCell pct={quote?.change_pct} close={quote?.close} mode={changeMode} />
           </td>
           <td className="px-4 py-3 text-right text-sm text-[#858ca2]">
             {fmtVol(quote?.volume)}
@@ -168,6 +168,7 @@ export function StockTable() {
   const [search, setSearch] = useState('');
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [selectedName, setSelectedName] = useState<string>('');
+  const [changeMode, setChangeMode] = useState<ChangeMode>('pct');
 
   const { data: stocks, isLoading, isError, refetch, isFetching, dataUpdatedAt } = useStockList();
 
@@ -282,9 +283,21 @@ export function StockTable() {
                 <th className="px-4 py-3 w-24">Mã</th>
                 <th className="px-4 py-3">Tên công ty</th>
                 <th className="px-4 py-3 text-right">Giá khớp</th>
-                <th className="px-4 py-3 text-right">Cao</th>
-                <th className="px-4 py-3 text-right">Thấp</th>
-                <th className="px-4 py-3 text-right">Biến động</th>
+                <th className="px-4 py-3 text-right">
+                  <button
+                    onClick={() => setChangeMode((m) => m === 'pct' ? 'price' : 'pct')}
+                    className="flex items-center gap-1 ml-auto hover:opacity-80 transition-opacity"
+                    title="Chuyển đổi biến động"
+                  >
+                    Biến động
+                    <span
+                      className="text-xs px-1 py-0.5 rounded font-bold"
+                      style={{ backgroundColor: '#22232a', color: '#3861fb' }}
+                    >
+                      {changeMode === 'pct' ? '%' : '₫'}
+                    </span>
+                  </button>
+                </th>
                 <th className="px-4 py-3 text-right">KL giao dịch</th>
               </tr>
             </thead>
@@ -299,6 +312,7 @@ export function StockTable() {
                       page={page}
                       quote={quotes?.[stock.symbol]}
                       quoteLoading={quotesLoading}
+                      changeMode={changeMode}
                       onSelect={handleSelect}
                     />
                   ))}

@@ -52,6 +52,13 @@ export function useStockHistory(symbol: string | null) {
   });
 }
 
+function normalizeQuote(q: QuoteData): QuoteData {
+  if (q.close && q.close > 0) return q;
+  const pct = q.change_pct ?? 0;
+  const inferredClose = pct < 0 ? q.low : pct > 0 ? q.high : (q.high ?? q.low);
+  return { ...q, close: inferredClose ?? 0 };
+}
+
 export function useStockQuotes(symbols: string[]) {
   return useQuery<Record<string, QuoteData>>({
     queryKey: ['stockQuotes', symbols.join(',')],
@@ -61,7 +68,9 @@ export function useStockQuotes(symbols: string[]) {
         '/v1/stocks/quotes',
         { symbols: symbols.join(','), source: 'KBS' },
       );
-      return res.data;
+      return Object.fromEntries(
+        Object.entries(res.data).map(([sym, q]) => [sym, normalizeQuote(q)])
+      );
     },
     enabled: symbols.length > 0,
     staleTime: 60_000,
