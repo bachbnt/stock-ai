@@ -1,9 +1,19 @@
 import { useState, useMemo } from 'react';
 import { RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, TrendingUp, TrendingDown, Pin } from 'lucide-react';
-import { useStockList, useStockQuotes } from '../hooks/useStock';
-import { useT } from '../contexts/I18nContext';
-import type { StockItem, QuoteData } from '../lib/api';
+import { useStockList, useStockQuotes } from '@/hooks/useStock';
+import { useT } from '@/contexts/I18nContext';
+import type { StockItem, QuoteData } from '@/lib/api';
 import { StockDetail } from './StockDetail';
+import {
+  quoteColor,
+  COLOR_TEXT,
+  COLOR_NONE,
+  COLOR_DOWN,
+  COLOR_BORDER,
+  COLOR_BG_CARD,
+  COLOR_BG_HOVER,
+  COLOR_ACCENT,
+} from '@/lib/colors';
 
 const PAGE_SIZE = 10;
 const PINNED = ['FPT'];
@@ -20,25 +30,22 @@ function fmtVol(n?: number): string {
   return String(n);
 }
 
-function priceColor(pct?: number): string {
-  if (pct == null || pct === 0) return '#f0b90b';
-  return pct > 0 ? '#16c784' : '#ea3943';
-}
-
 function PriceCell({ value, pct }: { value?: number; pct?: number }) {
-  if (value == null || value === 0) return <span className="text-[#858ca2]">—</span>;
-  return <span className="font-semibold text-sm" style={{ color: priceColor(pct) }}>{fmt(value)}</span>;
+  if (value == null || value === 0) return <span style={{ color: COLOR_NONE }}>—</span>;
+  return <span className="font-semibold text-sm" style={{ color: quoteColor(true, pct) }}>{fmt(value)}</span>;
 }
 
 type ChangeMode = 'pct' | 'price';
 
 function ChangeCell({ pct, close, mode }: { pct?: number; close?: number; mode: ChangeMode }) {
   const hasPrice = close != null && close > 0;
-  if (!hasPrice) return <span style={{ color: '#858ca2' }}>—</span>;
-  if (pct == null) return <span style={{ color: '#f0b90b' }}>—</span>;
+  const color = quoteColor(hasPrice, pct);
+
+  if (!hasPrice) return <span style={{ color }}>—</span>;
+  if (pct == null) return <span style={{ color }}>—</span>;
+
   const isUp = pct > 0;
   const isFlat = pct === 0;
-  const color = isFlat ? '#f0b90b' : isUp ? '#16c784' : '#ea3943';
 
   let display: string;
   if (mode === 'price' && close) {
@@ -66,7 +73,7 @@ function SkeletonCell() {
 
 function SkeletonRow() {
   return (
-    <tr className="border-b" style={{ borderColor: '#2a2b2e' }}>
+    <tr className="border-b" style={{ borderColor: COLOR_BORDER }}>
       <td className="px-4 py-3"><div className="skeleton h-3.5 rounded" style={{ width: 28 }} /></td>
       <td className="px-4 py-3"><div className="skeleton h-3.5 rounded" style={{ width: 48 }} /></td>
       <td className="px-4 py-3"><div className="skeleton h-3.5 rounded" style={{ width: 220 }} /></td>
@@ -85,7 +92,7 @@ interface PaginationProps {
 
 function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
   const { t } = useT();
-  const btnStyle = { backgroundColor: '#1a1b1e', color: '#858ca2', border: '1px solid #2a2b2e' };
+  const btnStyle = { backgroundColor: COLOR_BG_CARD, color: COLOR_NONE, border: `1px solid ${COLOR_BORDER}` };
   return (
     <div className="flex items-center justify-center gap-2 mt-4">
       <button
@@ -105,7 +112,7 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
       >
         <ChevronLeft size={14} /> {t('stock_list_prev')}
       </button>
-      <span className="text-sm font-medium px-1" style={{ color: '#858ca2' }}>
+      <span className="text-sm font-medium px-1" style={{ color: COLOR_NONE }}>
         {t('stock_list_page', { page: String(page), total: String(totalPages) })}
       </span>
       <button
@@ -153,13 +160,13 @@ function QuoteRow({
       key={stock.symbol}
       onClick={() => onSelect(stock)}
       className="border-b cursor-pointer"
-      style={{ borderColor: '#2a2b2e' }}
-      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#22232a')}
+      style={{ borderColor: COLOR_BORDER }}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLOR_BG_HOVER)}
       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
     >
-      <td className="px-4 py-3 text-[#858ca2] text-sm">
+      <td className="px-4 py-3 text-text-secondary text-sm">
         {pinned
-          ? <Pin size={12} style={{ color: '#3861fb' }} />
+          ? <Pin size={12} style={{ color: COLOR_ACCENT }} />
           : (page - 1) * PAGE_SIZE + idx + 1}
       </td>
       <td className="px-4 py-3">
@@ -183,7 +190,7 @@ function QuoteRow({
           <td className="px-4 py-3 text-right">
             <ChangeCell pct={quote?.change_pct} close={quote?.close} mode={changeMode} />
           </td>
-          <td className="px-4 py-3 text-right text-sm text-[#858ca2]">
+          <td className="px-4 py-3 text-right text-sm text-text-secondary">
             {fmtVol(quote?.volume)}
           </td>
         </>
@@ -252,7 +259,7 @@ export function StockTable() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-bold text-white">{t('stock_list_title')}</h1>
-          <p className="text-sm text-[#858ca2] mt-0.5">
+          <p className="text-sm text-text-secondary mt-0.5">
             {stocks
               ? t('stock_list_count', { n: (filtered.length + pinnedStocks.length).toLocaleString() })
               : t('stock_list_loading')}
@@ -260,7 +267,7 @@ export function StockTable() {
         </div>
         <div className="flex items-center gap-3">
           {lastUpdated && (
-            <span className="text-xs text-[#5a6172] hidden sm:inline">
+            <span className="text-xs text-text-muted hidden sm:inline">
               {t('stock_list_updated', { time: lastUpdated })}
             </span>
           )}
@@ -268,7 +275,7 @@ export function StockTable() {
             onClick={() => refetch()}
             disabled={isFetching}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
-            style={{ backgroundColor: '#1a1b1e', color: '#858ca2', border: '1px solid #2a2b2e' }}
+            style={{ backgroundColor: COLOR_BG_CARD, color: COLOR_NONE, border: `1px solid ${COLOR_BORDER}` }}
           >
             <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
             {t('stock_list_refresh')}
@@ -280,7 +287,7 @@ export function StockTable() {
         <Search
           size={15}
           className="absolute left-3 top-1/2 -translate-y-1/2"
-          style={{ color: '#858ca2' }}
+          style={{ color: COLOR_NONE }}
         />
         <input
           type="text"
@@ -288,14 +295,14 @@ export function StockTable() {
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           className="w-full pl-9 pr-4 py-2 rounded-lg text-sm outline-none"
-          style={{ backgroundColor: '#1a1b1e', border: '1px solid #2a2b2e', color: '#ffffff' }}
+          style={{ backgroundColor: COLOR_BG_CARD, border: `1px solid ${COLOR_BORDER}`, color: COLOR_TEXT }}
         />
       </div>
 
       {isError && (
         <div
           className="rounded-xl p-4 mb-4 border text-sm"
-          style={{ backgroundColor: '#ea394315', borderColor: '#ea394340', color: '#ea3943' }}
+          style={{ backgroundColor: COLOR_DOWN + '15', borderColor: COLOR_DOWN + '40', color: COLOR_DOWN }}
         >
           {t('stock_list_error')}
         </div>
@@ -303,14 +310,14 @@ export function StockTable() {
 
       <div
         className="rounded-xl border overflow-hidden"
-        style={{ borderColor: '#2a2b2e', backgroundColor: '#1a1b1e' }}
+        style={{ borderColor: COLOR_BORDER, backgroundColor: COLOR_BG_CARD }}
       >
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr
                 className="border-b text-xs font-medium uppercase tracking-wider"
-                style={{ borderColor: '#2a2b2e', color: '#858ca2' }}
+                style={{ borderColor: COLOR_BORDER, color: COLOR_NONE }}
               >
                 <th className="px-4 py-3 w-10">{t('stock_list_col_no')}</th>
                 <th className="px-4 py-3 w-24">{t('stock_list_col_symbol')}</th>
@@ -319,13 +326,13 @@ export function StockTable() {
                 <th className="px-4 py-3 text-right">
                   <button
                     onClick={() => setChangeMode((m) => m === 'pct' ? 'price' : 'pct')}
-                    className="flex items-center gap-1 ml-auto hover:opacity-80 transition-opacity"
+                    className="flex items-center gap-1 ml-auto hover:opacity-80 transition-opacity uppercase"
                     title={t('stock_list_col_change')}
                   >
                     {t('stock_list_col_change')}
                     <span
                       className="text-xs px-1 py-0.5 rounded font-bold"
-                      style={{ backgroundColor: '#22232a', color: '#3861fb' }}
+                      style={{ backgroundColor: COLOR_BG_HOVER, color: COLOR_ACCENT }}
                     >
                       {changeMode === 'pct' ? '%' : '₫'}
                     </span>
@@ -371,7 +378,7 @@ export function StockTable() {
         <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       )}
 
-      <p className="text-xs text-[#5a6172] mt-3 text-center">
+      <p className="text-xs text-text-muted mt-3 text-center">
         {t('stock_list_footer')}
       </p>
 

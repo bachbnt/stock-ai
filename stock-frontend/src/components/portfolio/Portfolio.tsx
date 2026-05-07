@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { Plus, TrendingUp, TrendingDown, Wallet, BarChart2 } from 'lucide-react';
-import { useTransactions, useAuth } from '../../hooks/usePortfolio';
-import { useStockQuotes } from '../../hooks/useStock';
-import { useT } from '../../contexts/I18nContext';
+import { useTransactions, useAuth } from '@/hooks/usePortfolio';
+import { useStockQuotes } from '@/hooks/useStock';
+import { useT } from '@/contexts/I18nContext';
 import {
   computeHoldings,
   computeRealizedPnl,
   enrichHoldings,
   computeSummary,
   fmtMoney,
-} from '../../lib/portfolio';
+} from '@/lib/portfolio';
+import { pnlColor, COLOR_TEXT, COLOR_NONE, COLOR_BORDER, COLOR_BG_CARD, COLOR_BG_HOVER, COLOR_ACCENT } from '@/lib/colors';
 import { HoldingsTable } from './HoldingsTable';
 import { PortfolioChart } from './PortfolioChart';
 import { TransactionList } from './TransactionList';
 import { TransactionModal } from './TransactionModal';
-import { StockDetail } from '../StockDetail';
+import { StockDetail } from '@/components/StockDetail';
 
 function SummaryCard({
   label,
@@ -32,17 +33,17 @@ function SummaryCard({
   return (
     <div
       className="rounded-xl p-4 border flex items-start gap-3"
-      style={{ backgroundColor: '#1a1b1e', borderColor: '#2a2b2e' }}
+      style={{ backgroundColor: COLOR_BG_CARD, borderColor: COLOR_BORDER }}
     >
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-        style={{ backgroundColor: '#22232a' }}
+        style={{ backgroundColor: COLOR_BG_HOVER }}
       >
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-[#858ca2]">{label}</p>
-        <p className="text-base font-bold text-white mt-0.5 truncate" style={{ color: color ?? '#fff' }}>
+        <p className="text-xs text-text-secondary">{label}</p>
+        <p className="text-base font-bold text-white mt-0.5 truncate" style={{ color: color ?? COLOR_TEXT }}>
           {value}
         </p>
         {sub && <p className="text-xs mt-0.5 font-semibold" style={{ color }}>{sub}</p>}
@@ -68,8 +69,8 @@ export function Portfolio() {
   const realizedPnl = computeRealizedPnl(transactions);
   const summary = computeSummary(enriched, realizedPnl);
 
-  const unrealizedColor = summary.unrealizedPnl > 0 ? '#16c784' : summary.unrealizedPnl < 0 ? '#ea3943' : '#858ca2';
-  const realizedColor = realizedPnl > 0 ? '#16c784' : realizedPnl < 0 ? '#ea3943' : '#858ca2';
+  const unrealizedColor = pnlColor(summary.unrealizedPnl);
+  const realizedColor = pnlColor(realizedPnl);
 
   if (isLoading) {
     return (
@@ -84,12 +85,12 @@ export function Portfolio() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-white">{t('portfolio_title')}</h1>
-          <p className="text-sm text-[#858ca2] mt-0.5">{user?.email}</p>
+          <p className="text-sm text-text-secondary mt-0.5">{user?.email}</p>
         </div>
         <button
           onClick={() => setShowAdd(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
-          style={{ backgroundColor: '#3861fb' }}
+          style={{ backgroundColor: COLOR_ACCENT }}
         >
           <Plus size={15} /> {t('portfolio_add_tx')}
         </button>
@@ -99,12 +100,12 @@ export function Portfolio() {
         <SummaryCard
           label={t('portfolio_total_cost')}
           value={fmtMoney(summary.totalCost, locale)}
-          icon={<Wallet size={16} color="#858ca2" />}
+          icon={<Wallet size={16} color={COLOR_NONE} />}
         />
         <SummaryCard
           label={t('portfolio_total_value')}
           value={fmtMoney(summary.totalValue, locale)}
-          icon={<BarChart2 size={16} color="#3861fb" />}
+          icon={<BarChart2 size={16} color={COLOR_ACCENT} />}
         />
         <SummaryCard
           label={t('portfolio_unrealized_pnl')}
@@ -132,13 +133,13 @@ export function Portfolio() {
       {holdings.length > 0 && (
         <div
           className="rounded-xl border p-4"
-          style={{ backgroundColor: '#1a1b1e', borderColor: '#2a2b2e' }}
+          style={{ backgroundColor: COLOR_BG_CARD, borderColor: COLOR_BORDER }}
         >
           <PortfolioChart holdings={holdings} />
         </div>
       )}
 
-      <div className="flex gap-0 border-b" style={{ borderColor: '#2a2b2e' }}>
+      <div className="flex gap-0 border-b" style={{ borderColor: COLOR_BORDER }}>
         {([
           { id: 'holdings' as const, label: t('portfolio_tab_holdings', { n: String(holdings.length) }) },
           { id: 'transactions' as const, label: t('portfolio_tab_transactions', { n: String(transactions.length) }) },
@@ -148,8 +149,8 @@ export function Portfolio() {
             onClick={() => setTab(tb.id)}
             className="px-4 py-2 text-sm font-medium transition-colors"
             style={{
-              color: tab === tb.id ? '#fff' : '#858ca2',
-              borderBottom: tab === tb.id ? '2px solid #3861fb' : '2px solid transparent',
+              color: tab === tb.id ? COLOR_TEXT : COLOR_NONE,
+              borderBottom: tab === tb.id ? `2px solid ${COLOR_ACCENT}` : '2px solid transparent',
               marginBottom: -1,
             }}
           >

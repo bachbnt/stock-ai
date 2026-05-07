@@ -7,10 +7,11 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts';
-import type { Holding } from '../../lib/portfolio';
-import { fmtMoney } from '../../lib/portfolio';
-import { usePortfolioHistory } from '../../hooks/usePortfolio';
-import { useT } from '../../contexts/I18nContext';
+import type { Holding } from '@/lib/portfolio';
+import { fmtMoney } from '@/lib/portfolio';
+import { usePortfolioHistory } from '@/hooks/usePortfolio';
+import { useT } from '@/contexts/I18nContext';
+import { trendColor, COLOR_TEXT, COLOR_NONE, COLOR_BORDER, COLOR_BG_HOVER } from '@/lib/colors';
 
 interface Props {
   holdings: Holding[];
@@ -25,17 +26,17 @@ export function PortfolioChart({ holdings }: Props) {
   if (isLoading) return <div className="skeleton h-48 rounded-xl" />;
 
   if (data.length === 0) {
-    return <p className="text-sm text-[#858ca2] text-center py-4">{t('chart_no_data')}</p>;
+    return <p className="text-sm text-text-secondary text-center py-4">{t('chart_no_data')}</p>;
   }
 
   const minVal = Math.min(...data.map((d) => d.value));
   const maxVal = Math.max(...data.map((d) => d.value));
   const isPositiveTrend = data[data.length - 1].value >= data[0].value;
-  const lineColor = isPositiveTrend ? '#16c784' : '#ea3943';
+  const lineColor = trendColor(isPositiveTrend);
 
   return (
     <div>
-      <p className="text-xs text-[#858ca2] mb-2">{t('chart_portfolio_title')}</p>
+      <p className="text-xs text-text-secondary mb-2">{t('chart_portfolio_title')}</p>
       <ResponsiveContainer width="100%" height={180}>
         <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
           <defs>
@@ -44,17 +45,17 @@ export function PortfolioChart({ holdings }: Props) {
               <stop offset="95%" stopColor={lineColor} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2a2b2e" />
+          <CartesianGrid strokeDasharray="3 3" stroke={COLOR_BORDER} />
           <XAxis
             dataKey="date"
-            tick={{ fill: '#858ca2', fontSize: 10 }}
+            tick={{ fill: COLOR_NONE, fontSize: 10 }}
             tickLine={false}
             axisLine={false}
             interval="preserveStartEnd"
             tickFormatter={(v: string) => `${v.slice(8, 10)}/${v.slice(5, 7)}`}
           />
           <YAxis
-            tick={{ fill: '#858ca2', fontSize: 10 }}
+            tick={{ fill: COLOR_NONE, fontSize: 10 }}
             tickLine={false}
             axisLine={false}
             width={65}
@@ -63,10 +64,10 @@ export function PortfolioChart({ holdings }: Props) {
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#22232a',
-              border: '1px solid #2a2b2e',
+              backgroundColor: COLOR_BG_HOVER,
+              border: `1px solid ${COLOR_BORDER}`,
               borderRadius: 8,
-              color: '#fff',
+              color: COLOR_TEXT,
               fontSize: 12,
             }}
             labelFormatter={(v: string) => `${v.slice(8, 10)}/${v.slice(5, 7)}`}

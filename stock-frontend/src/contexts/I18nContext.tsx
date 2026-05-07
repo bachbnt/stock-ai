@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
-import { defaultLocale, localeNames, translations } from '../lib/i18n';
-import type { Locale, TranslationKey } from '../lib/i18n';
+import { defaultLocale, localeNames, translations } from '@/lib/i18n';
+import type { Locale, TranslationKey } from '@/lib/i18n';
 
 interface I18nContextValue {
   locale: Locale;

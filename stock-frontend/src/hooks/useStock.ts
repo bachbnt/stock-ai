@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { stockRequest } from '../lib/api';
-import type { StockItem, StockHistoryItem, CompanyInfo, QuoteData } from '../lib/api';
+import { stockRequest } from '@/lib/api';
+import type { StockItem, StockHistoryItem, CompanyInfo, QuoteData } from '@/lib/api';
 
 interface StockListResponse {
   success: boolean;

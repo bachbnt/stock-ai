@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient, useQueries } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
-import { stockRequest } from '../lib/api';
-import type { Transaction, TransactionInsert } from '../lib/supabase';
-import type { Holding } from '../lib/portfolio';
-import type { StockHistoryItem } from '../lib/api';
+import { supabase } from '@/lib/supabase';
+import { stockRequest } from '@/lib/api';
+import type { Transaction, TransactionInsert } from '@/lib/supabase';
+import type { Holding } from '@/lib/portfolio';
+import type { StockHistoryItem } from '@/lib/api';
 
 interface StockHistoryResponse {
   success: boolean;

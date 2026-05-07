@@ -1,12 +1,7 @@
-import { useT } from '../../contexts/I18nContext';
-import { fmtMoney, fmtPrice } from '../../lib/portfolio';
-import type { HoldingWithPrice } from '../../lib/portfolio';
-
-function pnlColor(v: number) {
-  if (v > 0) return '#16c784';
-  if (v < 0) return '#ea3943';
-  return '#858ca2';
-}
+import { useT } from '@/contexts/I18nContext';
+import { fmtMoney, fmtPrice } from '@/lib/portfolio';
+import type { HoldingWithPrice } from '@/lib/portfolio';
+import { pnlColor, COLOR_TEXT, COLOR_NONE, COLOR_BORDER, COLOR_BG_CARD, COLOR_BG_HOVER } from '@/lib/colors';
 
 function fmtPnl(n: number, locale: Parameters<typeof fmtMoney>[1]) {
   return `${n > 0 ? '+' : ''}${fmtMoney(n, locale)}`;
@@ -22,18 +17,18 @@ export function HoldingsTable({ holdings, onSelectSymbol }: Props) {
 
   if (holdings.length === 0) {
     return (
-      <p className="text-sm text-[#858ca2] text-center py-8">
+      <p className="text-sm text-text-secondary text-center py-8">
         {t('holdings_empty')}
       </p>
     );
   }
 
   return (
-    <div className="rounded-xl border overflow-hidden" style={{ borderColor: '#2a2b2e', backgroundColor: '#1a1b1e' }}>
+    <div className="rounded-xl border overflow-hidden" style={{ borderColor: COLOR_BORDER, backgroundColor: COLOR_BG_CARD }}>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b text-xs font-medium uppercase tracking-wider" style={{ borderColor: '#2a2b2e', color: '#858ca2' }}>
+            <tr className="border-b text-xs font-medium uppercase tracking-wider" style={{ borderColor: COLOR_BORDER, color: COLOR_NONE }}>
               <th className="px-4 py-3">{t('holdings_col_symbol')}</th>
               <th className="px-4 py-3 text-right">{t('holdings_col_qty')}</th>
               <th className="px-4 py-3 text-right">{t('holdings_col_avg_cost')}</th>
@@ -49,8 +44,8 @@ export function HoldingsTable({ holdings, onSelectSymbol }: Props) {
                 key={h.symbol}
                 onClick={() => onSelectSymbol(h.symbol)}
                 className="border-b cursor-pointer"
-                style={{ borderColor: '#2a2b2e' }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#22232a')}
+                style={{ borderColor: COLOR_BORDER }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLOR_BG_HOVER)}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
                 <td className="px-4 py-3">
@@ -60,7 +55,7 @@ export function HoldingsTable({ holdings, onSelectSymbol }: Props) {
                   {h.quantity.toLocaleString()}
                 </td>
                 <td className="px-4 py-3 text-right text-sm text-white">{fmtPrice(h.avgCost)}</td>
-                <td className="px-4 py-3 text-right text-sm" style={{ color: h.currentPrice > 0 ? '#fff' : '#858ca2' }}>
+                <td className="px-4 py-3 text-right text-sm" style={{ color: h.currentPrice > 0 ? COLOR_TEXT : COLOR_NONE }}>
                   {fmtPrice(h.currentPrice)}
                 </td>
                 <td className="px-4 py-3 text-right text-sm text-white">

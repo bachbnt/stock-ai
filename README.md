@@ -6,11 +6,12 @@
 
 | Thành phần | Công nghệ |
 |---|---|
-| Backend | Python 3.13 · FastAPI · uvicorn · vnstock |
-| Frontend | React 19 · TypeScript · Vite 8 · Tailwind CSS 3 |
+| Backend | Python 3.11+ · FastAPI · uvicorn · vnstock |
+| Frontend | React 19 · TypeScript · Vite · Tailwind CSS 3 |
 | Routing | React Router DOM v7 |
 | State / Data fetching | TanStack Query v5 |
-| Biểu đồ | Recharts v3 |
+| Biểu đồ | Recharts v3 (line) · lightweight-charts v5 (candlestick) |
+| Chỉ báo kỹ thuật | technicalindicators (MA, MACD, RSI) |
 | Auth / Database | Supabase (Auth + PostgreSQL + RLS) |
 | Icons | Lucide React |
 | Dữ liệu thị trường | vnstock (nguồn KBS) |
@@ -23,10 +24,15 @@ crypto-ai/
 └── stock-frontend/   # React SPA
     └── src/
         ├── components/
-        │   └── portfolio/   # Portfolio CRUD components
-        ├── contexts/        # I18nContext (localization)
-        ├── hooks/           # useStock, usePortfolio
-        └── lib/             # api, portfolio logic, supabase, i18n
+        │   ├── CandleChart.tsx      # Biểu đồ nến + chỉ báo kỹ thuật
+        │   ├── StockDetail.tsx      # Modal chi tiết cổ phiếu
+        │   ├── StockTable.tsx       # Bảng thị trường + phân trang
+        │   ├── AuthModal.tsx        # Đăng nhập / đăng ký
+        │   ├── Navbar.tsx           # Navigation + chọn ngôn ngữ
+        │   └── portfolio/           # Portfolio CRUD components
+        ├── contexts/                # I18nContext (localization)
+        ├── hooks/                   # useStock, usePortfolio
+        └── lib/                     # api, portfolio, colors, i18n, supabase
 ```
 
 ## Yêu cầu
@@ -45,7 +51,6 @@ crypto-ai/
 ```bash
 cd stock-backend
 
-# Tạo virtual environment
 python3 -m venv .venv
 source .venv/bin/activate          # macOS / Linux
 .venv\Scripts\activate             # Windows
@@ -129,11 +134,16 @@ Frontend chạy tại: `http://localhost:5173`
 ## Tính năng
 
 ### Thị trường (`/`)
-- Danh sách ~1537 mã niêm yết, tìm kiếm theo mã hoặc tên công ty, phân trang
+- Danh sách ~1537 mã niêm yết, tìm kiếm theo mã hoặc tên công ty
+- Phân trang với nút đầu / cuối / trước / sau; FPT ghim cố định đầu bảng mọi trang
 - Bảng giá: Giá khớp · Biến động (click header để chuyển giữa % và ₫) · Khối lượng
-- Màu giá: xanh (tăng) · đỏ (giảm) · vàng (không đổi)
+- Màu giá: xanh (tăng) · đỏ (giảm) · vàng (không đổi) · xám (không có dữ liệu)
 - Auto-refresh mỗi 2 phút, nút làm mới thủ công
-- Click mã → modal chi tiết: biểu đồ đóng cửa 90 ngày + thông tin công ty (tab Thông tin / Kinh doanh / Lịch sử)
+- Click mã → modal chi tiết với 4 tab:
+  - **Biểu đồ**: đường thẳng (90 ngày) hoặc nến với MA5/10/20/50, Volume, MACD, RSI; legend hover realtime
+  - **Thông tin công ty**: thông tin cơ bản, địa chỉ, chi nhánh
+  - **Mô hình Kinh doanh**: mô tả hoạt động kinh doanh (nếu có)
+  - **Lịch sử**: lịch sử thành lập (nếu có)
 
 ### Danh mục (`/portfolio`) — yêu cầu đăng nhập
 - Đăng ký / đăng nhập bằng email + password (Supabase Auth)
@@ -146,7 +156,8 @@ Frontend chạy tại: `http://localhost:5173`
 - Dữ liệu cô lập theo từng user (Row Level Security)
 
 ### Hệ thống
-- Giao diện tiếng Việt, hệ thống i18n sẵn sàng mở rộng thêm ngôn ngữ
+- Đa ngôn ngữ: Tiếng Việt · Tiếng Nhật · English (chọn trên Navbar)
+- Số tiền hiển thị theo locale (Intl.NumberFormat compact)
 - Dark mode toàn bộ
 
 ---

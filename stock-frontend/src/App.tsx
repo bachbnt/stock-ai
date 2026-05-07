@@ -1,16 +1,17 @@
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './lib/queryClient';
-import { I18nProvider } from './contexts/I18nContext';
-import { Navbar } from './components/Navbar';
-import { StockTable } from './components/StockTable';
-import { Portfolio } from './components/portfolio/Portfolio';
-import { useAuth } from './hooks/usePortfolio';
+import { queryClient } from '@/lib/queryClient';
+import { I18nProvider } from '@/contexts/I18nContext';
+import { Navbar } from '@/components/Navbar';
+import { StockTable } from '@/components/StockTable';
+import { Portfolio } from '@/components/portfolio/Portfolio';
+import { useAuth } from '@/hooks/usePortfolio';
 import './index.css';
+import { COLOR_BG_PRIMARY } from '@/lib/colors';
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="dark min-h-screen" style={{ backgroundColor: '#0d0e11' }}>
+    <div className="dark min-h-screen" style={{ backgroundColor: COLOR_BG_PRIMARY }}>
       <Navbar />
       <main>{children}</main>
     </div>
