@@ -1,7 +1,8 @@
-export type Locale = 'vi';
+export type Locale = 'vi' | 'ja';
 
 export const localeNames: Record<Locale, string> = {
   vi: 'Tiếng Việt',
+  ja: '日本語',
 };
 
 export const defaultLocale: Locale = 'vi';
@@ -137,4 +138,136 @@ const vi = {
 } as const;
 
 export type TranslationKey = keyof typeof vi;
-export const translations: Record<Locale, typeof vi> = { vi };
+type TranslationMap = Record<TranslationKey, string>;
+
+const ja: TranslationMap = {
+  // Navbar
+  nav_market: 'マーケット',
+  nav_portfolio: 'ポートフォリオ',
+  nav_login: 'ログイン',
+  nav_logout: 'ログアウト',
+
+  // Auth modal
+  auth_login: 'ログイン',
+  auth_signup: '新規登録',
+  auth_email: 'メールアドレス',
+  auth_password: 'パスワード',
+  auth_email_invalid: 'メールアドレスが正しくありません',
+  auth_password_required: 'パスワードを入力してください',
+  auth_password_min: 'パスワードは8文字以上必要です',
+  auth_password_letter: 'パスワードに英字を1文字以上含めてください',
+  auth_password_digit: 'パスワードに数字を1文字以上含めてください',
+  auth_signup_success: '登録完了！メールを確認してアカウントを有効化してください。',
+  auth_generic_error: 'エラーが発生しました',
+  auth_processing: '処理中...',
+  auth_no_account: 'アカウントをお持ちでない方？',
+  auth_has_account: 'すでにアカウントをお持ちの方？',
+  auth_password_hint: '8文字以上、英字と数字を含む',
+
+  // Stock list
+  stock_list_title: '銘柄一覧',
+  stock_list_loading: '読み込み中...',
+  stock_list_count: '{n} 銘柄',
+  stock_list_updated: '{time} 更新',
+  stock_list_refresh: '更新',
+  stock_list_search: '銘柄コードまたは企業名で検索...',
+  stock_list_error: 'データを取得できません。サーバーへの接続を確認してください。',
+  stock_list_col_no: '#',
+  stock_list_col_symbol: 'コード',
+  stock_list_col_company: '企業名',
+  stock_list_col_price: '現在値',
+  stock_list_col_change: '変動',
+  stock_list_col_volume: '出来高',
+  stock_list_prev: '前へ',
+  stock_list_next: '次へ',
+  stock_list_page: '{page} / {total} ページ',
+  stock_list_footer: '価格は2分ごとに自動更新 · 銘柄をクリックしてチャートを表示',
+
+  // Stock detail
+  detail_chart_title: '直近90日間の終値',
+  detail_no_history: '履歴データがありません。',
+  detail_close: '終値',
+  detail_tab_info: '会社情報',
+  detail_tab_business: '事業内容',
+  detail_tab_history: '会社沿革',
+  detail_field_exchange: '取引所',
+  detail_field_company_type: '会社種別',
+  detail_field_listing_date: '上場日',
+  detail_field_founded_date: '設立日',
+  detail_field_charter_capital: '資本金（十億VND）',
+  detail_field_employees: '従業員数',
+  detail_field_ceo: '代表取締役',
+  detail_field_ceo_title: '役職',
+  detail_field_inspector: '監査役',
+  detail_field_auditor: '監査法人',
+  detail_field_tax_id: '法人番号',
+  detail_field_phone: '電話番号',
+  detail_field_fax: 'FAX',
+  detail_field_email: 'メール',
+  detail_field_website: 'ウェブサイト',
+  detail_field_address: '住所',
+  detail_field_branches: '支店・営業所',
+
+  // Portfolio
+  portfolio_title: '私のポートフォリオ',
+  portfolio_add_tx: '取引を追加',
+  portfolio_tab_holdings: '保有銘柄（{n}）',
+  portfolio_tab_transactions: '取引履歴（{n}）',
+  portfolio_total_cost: '総投資額',
+  portfolio_total_value: '評価額',
+  portfolio_unrealized_pnl: '含み損益',
+  portfolio_realized_pnl: '実現損益',
+
+  // Holdings table
+  holdings_empty: '保有銘柄がありません。買い取引を追加してください。',
+  holdings_col_symbol: 'コード',
+  holdings_col_qty: '保有株数',
+  holdings_col_avg_cost: '平均取得単価',
+  holdings_col_current_price: '現在値',
+  holdings_col_value: '評価額',
+  holdings_col_pnl: '損益',
+  holdings_col_pct: '%',
+
+  // Transaction list
+  tx_list_empty: '取引履歴がありません。',
+  tx_list_col_date: '日付',
+  tx_list_col_symbol: 'コード',
+  tx_list_col_type: '種別',
+  tx_list_col_qty: '株数',
+  tx_list_col_price: '単価',
+  tx_list_col_fee: '手数料',
+  tx_list_col_value: '金額',
+  tx_list_col_note: 'メモ',
+  tx_type_buy: '買',
+  tx_type_sell: '売',
+  tx_delete_confirm: 'この取引を削除しますか？',
+
+  // Transaction modal
+  tx_modal_title_add: '取引を追加',
+  tx_modal_title_edit: '取引を編集',
+  tx_modal_symbol_label: '銘柄コード',
+  tx_modal_symbol_placeholder: '銘柄を検索...',
+  tx_modal_qty_label: '株数',
+  tx_modal_qty_max: '（最大 {max}）',
+  tx_modal_price_label: '単価（VND）',
+  tx_modal_price_market: '· 市場価格',
+  tx_modal_fee_label: '手数料（VND）',
+  tx_modal_date_label: '日付',
+  tx_modal_note_label: 'メモ（任意）',
+  tx_modal_saving: '保存中...',
+  tx_modal_btn_update: '更新',
+  tx_modal_btn_add_buy: '買注文を追加',
+  tx_modal_btn_add_sell: '売注文を追加',
+  tx_modal_err_symbol: '銘柄を選択してください',
+  tx_modal_err_qty: '株数は0より大きくしてください',
+  tx_modal_err_price: '単価は0より大きくしてください',
+  tx_modal_err_max_qty: '最大 {max} 株まで売却できます',
+  tx_modal_err_generic: 'エラーが発生しました',
+
+  // Portfolio chart
+  chart_portfolio_title: 'ポートフォリオ評価額の推移（90日）',
+  chart_no_data: '履歴データがありません。',
+  chart_value_label: '評価額',
+};
+
+export const translations: Record<Locale, TranslationMap> = { vi, ja };
