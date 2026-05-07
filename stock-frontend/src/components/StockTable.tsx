@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { RefreshCw, Search, ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { useStockList, useStockQuotes } from '../hooks/useStock';
+import { useT } from '../contexts/I18nContext';
 import type { StockItem, QuoteData } from '../lib/api';
 import { StockDetail } from './StockDetail';
 
@@ -77,6 +78,7 @@ interface PaginationProps {
 }
 
 function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
+  const { t } = useT();
   return (
     <div className="flex items-center justify-center gap-3 mt-4">
       <button
@@ -85,10 +87,10 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
         className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-30"
         style={{ backgroundColor: '#1a1b1e', color: '#858ca2', border: '1px solid #2a2b2e' }}
       >
-        <ChevronLeft size={14} /> Trước
+        <ChevronLeft size={14} /> {t('stock_list_prev')}
       </button>
       <span className="text-sm font-medium" style={{ color: '#858ca2' }}>
-        Trang {page} / {totalPages}
+        {t('stock_list_page', { page: String(page), total: String(totalPages) })}
       </span>
       <button
         onClick={() => onPageChange(page + 1)}
@@ -96,7 +98,7 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
         className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-30"
         style={{ backgroundColor: '#1a1b1e', color: '#858ca2', border: '1px solid #2a2b2e' }}
       >
-        Tiếp <ChevronRight size={14} />
+        {t('stock_list_next')} <ChevronRight size={14} />
       </button>
     </div>
   );
@@ -145,8 +147,6 @@ function QuoteRow({
           <SkeletonCell />
           <SkeletonCell />
           <SkeletonCell />
-          <SkeletonCell />
-          <SkeletonCell />
         </>
       ) : (
         <>
@@ -164,6 +164,7 @@ function QuoteRow({
 }
 
 export function StockTable() {
+  const { t } = useT();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
@@ -182,7 +183,6 @@ export function StockTable() {
             (s.organ_name ?? '').toLowerCase().includes(q),
         )
       : stocks;
-    // Đưa PINNED lên đầu khi không search
     if (q) return list;
     const pinned = list.filter((s) => PINNED.includes(s.symbol));
     const rest = list.filter((s) => !PINNED.includes(s.symbol));
@@ -217,15 +217,17 @@ export function StockTable() {
     <div className="max-w-screen-xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white">Danh sách Chứng khoán</h1>
+          <h1 className="text-xl font-bold text-white">{t('stock_list_title')}</h1>
           <p className="text-sm text-[#858ca2] mt-0.5">
-            {stocks ? `${filtered.length.toLocaleString()} mã` : 'Đang tải...'}
+            {stocks
+              ? t('stock_list_count', { n: filtered.length.toLocaleString() })
+              : t('stock_list_loading')}
           </p>
         </div>
         <div className="flex items-center gap-3">
           {lastUpdated && (
             <span className="text-xs text-[#5a6172] hidden sm:inline">
-              Cập nhật lúc {lastUpdated}
+              {t('stock_list_updated', { time: lastUpdated })}
             </span>
           )}
           <button
@@ -235,12 +237,11 @@ export function StockTable() {
             style={{ backgroundColor: '#1a1b1e', color: '#858ca2', border: '1px solid #2a2b2e' }}
           >
             <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
-            Làm mới
+            {t('stock_list_refresh')}
           </button>
         </div>
       </div>
 
-      {/* Search */}
       <div className="relative mb-4">
         <Search
           size={15}
@@ -249,7 +250,7 @@ export function StockTable() {
         />
         <input
           type="text"
-          placeholder="Tìm theo mã hoặc tên công ty..."
+          placeholder={t('stock_list_search')}
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           className="w-full pl-9 pr-4 py-2 rounded-lg text-sm outline-none"
@@ -257,17 +258,15 @@ export function StockTable() {
         />
       </div>
 
-      {/* Error */}
       {isError && (
         <div
           className="rounded-xl p-4 mb-4 border text-sm"
           style={{ backgroundColor: '#ea394315', borderColor: '#ea394340', color: '#ea3943' }}
         >
-          Không thể tải dữ liệu. Kiểm tra kết nối tới backend (localhost:8000).
+          {t('stock_list_error')}
         </div>
       )}
 
-      {/* Table */}
       <div
         className="rounded-xl border overflow-hidden"
         style={{ borderColor: '#2a2b2e', backgroundColor: '#1a1b1e' }}
@@ -279,17 +278,17 @@ export function StockTable() {
                 className="border-b text-xs font-medium uppercase tracking-wider"
                 style={{ borderColor: '#2a2b2e', color: '#858ca2' }}
               >
-                <th className="px-4 py-3 w-10">#</th>
-                <th className="px-4 py-3 w-24">Mã</th>
-                <th className="px-4 py-3">Tên công ty</th>
-                <th className="px-4 py-3 text-right">Giá khớp</th>
+                <th className="px-4 py-3 w-10">{t('stock_list_col_no')}</th>
+                <th className="px-4 py-3 w-24">{t('stock_list_col_symbol')}</th>
+                <th className="px-4 py-3">{t('stock_list_col_company')}</th>
+                <th className="px-4 py-3 text-right">{t('stock_list_col_price')}</th>
                 <th className="px-4 py-3 text-right">
                   <button
                     onClick={() => setChangeMode((m) => m === 'pct' ? 'price' : 'pct')}
                     className="flex items-center gap-1 ml-auto hover:opacity-80 transition-opacity"
-                    title="Chuyển đổi biến động"
+                    title={t('stock_list_col_change')}
                   >
-                    Biến động
+                    {t('stock_list_col_change')}
                     <span
                       className="text-xs px-1 py-0.5 rounded font-bold"
                       style={{ backgroundColor: '#22232a', color: '#3861fb' }}
@@ -298,7 +297,7 @@ export function StockTable() {
                     </span>
                   </button>
                 </th>
-                <th className="px-4 py-3 text-right">KL giao dịch</th>
+                <th className="px-4 py-3 text-right">{t('stock_list_col_volume')}</th>
               </tr>
             </thead>
             <tbody>
@@ -326,7 +325,7 @@ export function StockTable() {
       )}
 
       <p className="text-xs text-[#5a6172] mt-3 text-center">
-        Giá tự động làm mới sau 2 phút · Click vào mã để xem biểu đồ
+        {t('stock_list_footer')}
       </p>
 
       {selectedSymbol && (

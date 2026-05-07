@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useDeleteTransaction } from '../../hooks/usePortfolio';
+import { useT } from '../../contexts/I18nContext';
 import { fmtMoney, fmtPrice } from '../../lib/portfolio';
 import { TransactionModal } from './TransactionModal';
 import type { Transaction } from '../../lib/supabase';
@@ -10,13 +11,14 @@ interface Props {
 }
 
 export function TransactionList({ transactions }: Props) {
+  const { t } = useT();
   const [editing, setEditing] = useState<Transaction | null>(null);
   const deleteTx = useDeleteTransaction();
 
   const sorted = [...transactions].sort((a, b) => b.date.localeCompare(a.date));
 
   if (sorted.length === 0) {
-    return <p className="text-sm text-[#858ca2] text-center py-4">Chưa có giao dịch nào.</p>;
+    return <p className="text-sm text-[#858ca2] text-center py-4">{t('tx_list_empty')}</p>;
   }
 
   return (
@@ -26,14 +28,14 @@ export function TransactionList({ transactions }: Props) {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b text-xs font-medium uppercase tracking-wider" style={{ borderColor: '#2a2b2e', color: '#858ca2' }}>
-                <th className="px-4 py-3">Ngày</th>
-                <th className="px-4 py-3">Mã</th>
-                <th className="px-4 py-3">Loại</th>
-                <th className="px-4 py-3 text-right">Số CP</th>
-                <th className="px-4 py-3 text-right">Giá</th>
-                <th className="px-4 py-3 text-right">Phí</th>
-                <th className="px-4 py-3 text-right">Giá trị</th>
-                <th className="px-4 py-3 text-right">Ghi chú</th>
+                <th className="px-4 py-3">{t('tx_list_col_date')}</th>
+                <th className="px-4 py-3">{t('tx_list_col_symbol')}</th>
+                <th className="px-4 py-3">{t('tx_list_col_type')}</th>
+                <th className="px-4 py-3 text-right">{t('tx_list_col_qty')}</th>
+                <th className="px-4 py-3 text-right">{t('tx_list_col_price')}</th>
+                <th className="px-4 py-3 text-right">{t('tx_list_col_fee')}</th>
+                <th className="px-4 py-3 text-right">{t('tx_list_col_value')}</th>
+                <th className="px-4 py-3 text-right">{t('tx_list_col_note')}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -56,7 +58,7 @@ export function TransactionList({ transactions }: Props) {
                         color: tx.type === 'buy' ? '#16c784' : '#ea3943',
                       }}
                     >
-                      {tx.type === 'buy' ? 'Mua' : 'Bán'}
+                      {tx.type === 'buy' ? t('tx_type_buy') : t('tx_type_sell')}
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-right text-white">{tx.quantity.toLocaleString()}</td>
@@ -80,7 +82,7 @@ export function TransactionList({ transactions }: Props) {
                       </button>
                       <button
                         onClick={() => {
-                          if (confirm('Xoá giao dịch này?')) deleteTx.mutate(tx.id);
+                          if (confirm(t('tx_delete_confirm'))) deleteTx.mutate(tx.id);
                         }}
                         className="p-1.5 rounded hover:bg-[#22232a] text-[#858ca2] hover:text-[#ea3943]"
                       >

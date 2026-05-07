@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useStockHistory, useCompanyInfo } from '../hooks/useStock';
+import { useT } from '../contexts/I18nContext';
 import type { CompanyInfo } from '../lib/api';
 import {
   ResponsiveContainer,
@@ -24,6 +25,7 @@ function formatVND(n: number): string {
 }
 
 export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
+  const { t } = useT();
   const { data: history, isLoading: histLoading } = useStockHistory(symbol);
   const { data: company, isLoading: compLoading } = useCompanyInfo(symbol);
 
@@ -39,14 +41,13 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
-      onClick={onClose}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
         className="relative w-full max-w-2xl rounded-2xl border shadow-2xl overflow-y-auto max-h-[90vh]"
         style={{ backgroundColor: '#1a1b1e', borderColor: '#2a2b2e' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div
           className="flex items-center justify-between p-5 border-b"
           style={{ borderColor: '#2a2b2e' }}
@@ -74,7 +75,6 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Last price */}
           {lastPrice != null && (
             <div className="flex items-end gap-3">
               <span className="text-3xl font-bold text-white">{formatVND(lastPrice)}</span>
@@ -88,12 +88,11 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
             </div>
           )}
 
-          {/* Price chart */}
           {histLoading ? (
             <div className="skeleton h-48 rounded-xl" />
           ) : history && history.length > 0 ? (
             <div>
-              <p className="text-xs text-[#858ca2] mb-2">Giá đóng cửa 90 ngày gần nhất</p>
+              <p className="text-xs text-[#858ca2] mb-2">{t('detail_chart_title')}</p>
               <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={history} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2a2b2e" />
@@ -123,7 +122,7 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
                     labelFormatter={(v: string) => `${v.slice(8, 10)}/${v.slice(5, 7)}`}
                     formatter={(value: number | string | (number | string)[]) => {
                       const num = typeof value === 'number' ? value : 0;
-                      return [formatVND(num), 'Đóng cửa'];
+                      return [formatVND(num), t('detail_close')];
                     }}
                   />
                   <Line
@@ -137,10 +136,9 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
               </ResponsiveContainer>
             </div>
           ) : (
-            <p className="text-sm text-[#858ca2]">Không có dữ liệu lịch sử.</p>
+            <p className="text-sm text-[#858ca2]">{t('detail_no_history')}</p>
           )}
 
-          {/* Company info */}
           {compLoading ? (
             <div className="grid grid-cols-2 gap-3">
               {[...Array(6)].map((_, i) => (
@@ -159,32 +157,33 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
 type TabId = 'info' | 'business' | 'history';
 
 function CompanyInfoSection({ company }: { company: CompanyInfo }) {
+  const { t } = useT();
   const [tab, setTab] = useState<TabId>('info');
 
   const hasBusiness = !!(company.business_model && String(company.business_model).trim());
   const hasHistory = !!(company.history && String(company.history).trim());
 
   const tabs: { id: TabId; label: string }[] = [
-    { id: 'info', label: 'Thông tin' },
-    ...(hasBusiness ? [{ id: 'business' as const, label: 'Kinh doanh' }] : []),
-    ...(hasHistory ? [{ id: 'history' as const, label: 'Lịch sử' }] : []),
+    { id: 'info', label: t('detail_tab_info') },
+    ...(hasBusiness ? [{ id: 'business' as const, label: t('detail_tab_business') }] : []),
+    ...(hasHistory ? [{ id: 'history' as const, label: t('detail_tab_history') }] : []),
   ];
 
   return (
     <div>
       <div className="flex gap-0 mb-3 border-b" style={{ borderColor: '#2a2b2e' }}>
-        {tabs.map((t) => (
+        {tabs.map((tb) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tb.id}
+            onClick={() => setTab(tb.id)}
             className="px-4 py-2 text-xs font-medium transition-colors"
             style={{
-              color: tab === t.id ? '#fff' : '#858ca2',
-              borderBottom: tab === t.id ? '2px solid #3861fb' : '2px solid transparent',
+              color: tab === tb.id ? '#fff' : '#858ca2',
+              borderBottom: tab === tb.id ? '2px solid #3861fb' : '2px solid transparent',
               marginBottom: -1,
             }}
           >
-            {t.label}
+            {tb.label}
           </button>
         ))}
       </div>
@@ -201,22 +200,24 @@ function CompanyInfoSection({ company }: { company: CompanyInfo }) {
 }
 
 function CompanyInfoGrid({ company }: { company: CompanyInfo }) {
+  const { t } = useT();
+
   const fields = [
-    { label: 'Sàn giao dịch', key: 'exchange' },
-    { label: 'Loại công ty', key: 'company_type' },
-    { label: 'Ngày niêm yết', key: 'listing_date' },
-    { label: 'Ngày thành lập', key: 'founded_date' },
-    { label: 'Vốn điều lệ (tỷ)', key: 'charter_capital' },
-    { label: 'Số nhân viên', key: 'number_of_employees' },
-    { label: 'Chủ tịch HĐQT', key: 'ceo_name' },
-    { label: 'Chức danh', key: 'ceo_position' },
-    { label: 'Kiểm soát viên', key: 'inspector_name' },
-    { label: 'Đơn vị kiểm toán', key: 'auditor' },
-    { label: 'Mã số thuế', key: 'tax_id' },
-    { label: 'Điện thoại', key: 'phone' },
-    { label: 'Fax', key: 'fax' },
-    { label: 'Email', key: 'email' },
-    { label: 'Website', key: 'website' },
+    { label: t('detail_field_exchange'), key: 'exchange' },
+    { label: t('detail_field_company_type'), key: 'company_type' },
+    { label: t('detail_field_listing_date'), key: 'listing_date' },
+    { label: t('detail_field_founded_date'), key: 'founded_date' },
+    { label: t('detail_field_charter_capital'), key: 'charter_capital' },
+    { label: t('detail_field_employees'), key: 'number_of_employees' },
+    { label: t('detail_field_ceo'), key: 'ceo_name' },
+    { label: t('detail_field_ceo_title'), key: 'ceo_position' },
+    { label: t('detail_field_inspector'), key: 'inspector_name' },
+    { label: t('detail_field_auditor'), key: 'auditor' },
+    { label: t('detail_field_tax_id'), key: 'tax_id' },
+    { label: t('detail_field_phone'), key: 'phone' },
+    { label: t('detail_field_fax'), key: 'fax' },
+    { label: t('detail_field_email'), key: 'email' },
+    { label: t('detail_field_website'), key: 'website' },
   ];
 
   const gridEntries = fields
@@ -248,7 +249,7 @@ function CompanyInfoGrid({ company }: { company: CompanyInfo }) {
           className="rounded-lg p-3 border"
           style={{ backgroundColor: '#0d0e11', borderColor: '#2a2b2e' }}
         >
-          <p className="text-xs text-[#858ca2] mb-1">Địa chỉ</p>
+          <p className="text-xs text-[#858ca2] mb-1">{t('detail_field_address')}</p>
           <p className="text-sm font-semibold text-white">{address}</p>
         </div>
       )}
@@ -258,7 +259,7 @@ function CompanyInfoGrid({ company }: { company: CompanyInfo }) {
           className="rounded-lg p-3 border"
           style={{ backgroundColor: '#0d0e11', borderColor: '#2a2b2e' }}
         >
-          <p className="text-xs text-[#858ca2] mb-1">Chi nhánh / VPĐD</p>
+          <p className="text-xs text-[#858ca2] mb-1">{t('detail_field_branches')}</p>
           <p className="text-sm text-white whitespace-pre-line leading-relaxed">{branches}</p>
         </div>
       )}

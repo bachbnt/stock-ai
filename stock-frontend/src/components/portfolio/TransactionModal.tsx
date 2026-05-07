@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Search } from 'lucide-react';
 import { useAddTransaction, useUpdateTransaction } from '../../hooks/usePortfolio';
+import { useT } from '../../contexts/I18nContext';
 import { maxSellQty } from '../../lib/portfolio';
 import { useStockList, useStockQuotes } from '../../hooks/useStock';
 import type { Transaction } from '../../lib/supabase';
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function TransactionModal({ editing, transactions, onClose }: Props) {
+  const { t } = useT();
   const { data: stocks } = useStockList();
   const addTx = useAddTransaction();
   const updateTx = useUpdateTransaction();
@@ -31,13 +33,8 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
   const { data: marketQuotes } = useStockQuotes(symbol ? [symbol] : []);
   const marketPrice = symbol && marketQuotes ? (marketQuotes[symbol]?.close ?? 0) : 0;
 
-  // Auto-fill price with current market price when symbol is selected
-  useEffect(() => {
-    if (marketPrice > 0 && !priceEdited) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPrice(String(marketPrice));
-    }
-  }, [marketPrice, priceEdited]);
+  // Derive displayed price: use market price until user manually edits the field
+  const displayPrice = !priceEdited && marketPrice > 0 ? String(marketPrice) : price;
 
   const filteredStocks = stocks
     ? stocks
@@ -50,29 +47,25 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
     : [];
 
   const maxQty = type === 'sell' && symbol
-    ? maxSellQty(editing ? transactions.filter((t) => t.id !== editing.id) : transactions, symbol)
+    ? maxSellQty(editing ? transactions.filter((tx) => tx.id !== editing.id) : transactions, symbol)
     : null;
 
-  useEffect(() => {
-    if (type === 'sell' && maxQty !== null && Number(quantity) > maxQty) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setQuantity(String(maxQty));
-    }
-  }, [type, maxQty]);
+  // Clamp quantity to maxQty without an effect
+  const effectiveQty = maxQty !== null ? Math.min(Number(quantity), maxQty) : Number(quantity);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    const qty = Number(quantity);
-    const prc = Number(price);
+    const qty = effectiveQty;
+    const prc = Number(displayPrice);
     const f = Number(fee) || 0;
 
-    if (!symbol) return setError('Chọn mã cổ phiếu');
-    if (qty <= 0) return setError('Số lượng phải > 0');
-    if (prc <= 0) return setError('Giá phải > 0');
+    if (!symbol) return setError(t('tx_modal_err_symbol'));
+    if (qty <= 0) return setError(t('tx_modal_err_qty'));
+    if (prc <= 0) return setError(t('tx_modal_err_price'));
     if (type === 'sell' && maxQty !== null && qty > maxQty) {
-      return setError(`Chỉ có thể bán tối đa ${maxQty.toLocaleString()} CP`);
+      return setError(t('tx_modal_err_max_qty', { max: maxQty.toLocaleString() }));
     }
 
     try {
@@ -84,7 +77,7 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
       }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
+      setError(err instanceof Error ? err.message : t('tx_modal_err_generic'));
     }
   }
 
@@ -103,7 +96,7 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
       >
         <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: '#2a2b2e' }}>
           <h2 className="text-base font-bold text-white">
-            {editing ? 'Sửa giao dịch' : 'Thêm giao dịch'}
+            {editing ? t('tx_modal_title_edit') : t('tx_modal_title_add')}
           </h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-[#22232a] text-[#858ca2] hover:text-white">
             <X size={18} />
@@ -117,32 +110,30 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
             </div>
           )}
 
-          {/* Buy / Sell toggle */}
           <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: '#2a2b2e' }}>
-            {(['buy', 'sell'] as const).map((t) => (
+            {(['buy', 'sell'] as const).map((tp) => (
               <button
-                key={t}
+                key={tp}
                 type="button"
-                onClick={() => setType(t)}
+                onClick={() => setType(tp)}
                 className="flex-1 py-2 text-sm font-semibold transition-colors"
                 style={{
-                  backgroundColor: type === t ? (t === 'buy' ? '#16c784' : '#ea3943') : '#0d0e11',
-                  color: type === t ? '#fff' : '#858ca2',
+                  backgroundColor: type === tp ? (tp === 'buy' ? '#16c784' : '#ea3943') : '#0d0e11',
+                  color: type === tp ? '#fff' : '#858ca2',
                 }}
               >
-                {t === 'buy' ? 'Mua' : 'Bán'}
+                {tp === 'buy' ? t('tx_type_buy') : t('tx_type_sell')}
               </button>
             ))}
           </div>
 
-          {/* Symbol search */}
           <div className="relative">
-            <label className="text-xs text-[#858ca2] mb-1 block">Mã cổ phiếu</label>
+            <label className="text-xs text-[#858ca2] mb-1 block">{t('tx_modal_symbol_label')}</label>
             <div className="relative">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#858ca2]" />
               <input
                 type="text"
-                placeholder="Tìm mã..."
+                placeholder={t('tx_modal_symbol_placeholder')}
                 value={symbolSearch}
                 onChange={(e) => { setSymbolSearch(e.target.value); setSymbol(''); setShowDropdown(true); }}
                 onFocus={() => setShowDropdown(true)}
@@ -169,7 +160,7 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
                       setSymbol(s.symbol);
                       setSymbolSearch(s.symbol);
                       setShowDropdown(false);
-                      setPriceEdited(false); // allow auto-fill on new symbol
+                      setPriceEdited(false);
                     }}
                   >
                     <span className="font-bold text-white w-14 shrink-0">{s.symbol}</span>
@@ -183,7 +174,8 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-[#858ca2] mb-1 block">
-                Số lượng{maxQty !== null ? ` (tối đa ${maxQty.toLocaleString()})` : ''}
+                {t('tx_modal_qty_label')}
+                {maxQty !== null && ` ${t('tx_modal_qty_max', { max: maxQty.toLocaleString() })}`}
               </label>
               <input
                 type="number"
@@ -191,7 +183,7 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
                 step="1"
                 min={1}
                 max={maxQty ?? undefined}
-                value={quantity}
+                value={String(effectiveQty)}
                 onChange={(e) => setQuantity(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg text-sm outline-none text-white"
                 style={{ backgroundColor: '#0d0e11', border: '1px solid #2a2b2e' }}
@@ -199,22 +191,22 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
             </div>
             <div>
               <label className="text-xs text-[#858ca2] mb-1 block">
-                Giá (VND){marketPrice > 0 && !priceEdited ? ` · thị trường` : ''}
+                {t('tx_modal_price_label')}
+                {marketPrice > 0 && !priceEdited && ` ${t('tx_modal_price_market')}`}
               </label>
               <input
                 type="number"
                 required
                 step="1"
                 min={1}
-                value={price}
-                placeholder={marketPrice > 0 ? String(marketPrice) : '10000'}
+                value={displayPrice}
                 onChange={(e) => { setPrice(e.target.value); setPriceEdited(true); }}
                 className="w-full px-3 py-2 rounded-lg text-sm outline-none text-white"
                 style={{ backgroundColor: '#0d0e11', border: '1px solid #2a2b2e' }}
               />
             </div>
             <div>
-              <label className="text-xs text-[#858ca2] mb-1 block">Phí (VND)</label>
+              <label className="text-xs text-[#858ca2] mb-1 block">{t('tx_modal_fee_label')}</label>
               <input
                 type="number"
                 min={0}
@@ -226,7 +218,7 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
               />
             </div>
             <div>
-              <label className="text-xs text-[#858ca2] mb-1 block">Ngày</label>
+              <label className="text-xs text-[#858ca2] mb-1 block">{t('tx_modal_date_label')}</label>
               <input
                 type="date"
                 required
@@ -239,7 +231,7 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
           </div>
 
           <div>
-            <label className="text-xs text-[#858ca2] mb-1 block">Ghi chú (tuỳ chọn)</label>
+            <label className="text-xs text-[#858ca2] mb-1 block">{t('tx_modal_note_label')}</label>
             <input
               type="text"
               value={note}
@@ -255,7 +247,13 @@ export function TransactionModal({ editing, transactions, onClose }: Props) {
             className="w-full py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
             style={{ backgroundColor: type === 'buy' ? '#16c784' : '#ea3943' }}
           >
-            {isPending ? 'Đang lưu...' : editing ? 'Cập nhật' : type === 'buy' ? 'Thêm lệnh mua' : 'Thêm lệnh bán'}
+            {isPending
+              ? t('tx_modal_saving')
+              : editing
+                ? t('tx_modal_btn_update')
+                : type === 'buy'
+                  ? t('tx_modal_btn_add_buy')
+                  : t('tx_modal_btn_add_sell')}
           </button>
         </form>
       </div>

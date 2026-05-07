@@ -9,12 +9,14 @@ import {
 } from 'recharts';
 import type { Holding } from '../../lib/portfolio';
 import { usePortfolioHistory } from '../../hooks/usePortfolio';
+import { useT } from '../../contexts/I18nContext';
 
 interface Props {
   holdings: Holding[];
 }
 
 export function PortfolioChart({ holdings }: Props) {
+  const { t } = useT();
   const { data, isLoading } = usePortfolioHistory(holdings);
 
   if (holdings.length === 0) return null;
@@ -22,7 +24,7 @@ export function PortfolioChart({ holdings }: Props) {
   if (isLoading) return <div className="skeleton h-48 rounded-xl" />;
 
   if (data.length === 0) {
-    return <p className="text-sm text-[#858ca2] text-center py-4">Không có dữ liệu lịch sử.</p>;
+    return <p className="text-sm text-[#858ca2] text-center py-4">{t('chart_no_data')}</p>;
   }
 
   const minVal = Math.min(...data.map((d) => d.value));
@@ -32,7 +34,7 @@ export function PortfolioChart({ holdings }: Props) {
 
   return (
     <div>
-      <p className="text-xs text-[#858ca2] mb-2">Biến động giá trị danh mục (90 ngày)</p>
+      <p className="text-xs text-[#858ca2] mb-2">{t('chart_portfolio_title')}</p>
       <ResponsiveContainer width="100%" height={180}>
         <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
           <defs>
@@ -77,7 +79,7 @@ export function PortfolioChart({ holdings }: Props) {
               const s = abs >= 1_000_000_000 ? `${(value / 1_000_000_000).toFixed(2)} tỷ`
                 : abs >= 1_000_000 ? `${(value / 1_000_000).toFixed(2)} triệu`
                 : `${(value / 1_000).toFixed(0)} nghìn`;
-              return [s, 'Giá trị'];
+              return [s, t('chart_value_label')];
             }}
           />
           <Area

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, TrendingUp, TrendingDown, Wallet, BarChart2 } from 'lucide-react';
 import { useTransactions, useAuth } from '../../hooks/usePortfolio';
 import { useStockQuotes } from '../../hooks/useStock';
+import { useT } from '../../contexts/I18nContext';
 import {
   computeHoldings,
   computeRealizedPnl,
@@ -53,6 +54,7 @@ function SummaryCard({
 type PortfolioTab = 'holdings' | 'transactions';
 
 export function Portfolio() {
+  const { t } = useT();
   const { user } = useAuth();
   const { data: transactions = [], isLoading } = useTransactions(user?.id ?? null);
   const [showAdd, setShowAdd] = useState(false);
@@ -79,10 +81,9 @@ export function Portfolio() {
 
   return (
     <div className="max-w-screen-xl mx-auto px-4 py-6 space-y-5">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Danh mục của tôi</h1>
+          <h1 className="text-xl font-bold text-white">{t('portfolio_title')}</h1>
           <p className="text-sm text-[#858ca2] mt-0.5">{user?.email}</p>
         </div>
         <button
@@ -90,24 +91,23 @@ export function Portfolio() {
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
           style={{ backgroundColor: '#3861fb' }}
         >
-          <Plus size={15} /> Thêm giao dịch
+          <Plus size={15} /> {t('portfolio_add_tx')}
         </button>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <SummaryCard
-          label="Tổng vốn đầu tư"
+          label={t('portfolio_total_cost')}
           value={fmtMoney(summary.totalCost)}
           icon={<Wallet size={16} color="#858ca2" />}
         />
         <SummaryCard
-          label="Giá trị hiện tại"
+          label={t('portfolio_total_value')}
           value={fmtMoney(summary.totalValue)}
           icon={<BarChart2 size={16} color="#3861fb" />}
         />
         <SummaryCard
-          label="Lãi/lỗ chưa thực hiện"
+          label={t('portfolio_unrealized_pnl')}
           value={`${summary.unrealizedPnl > 0 ? '+' : ''}${fmtMoney(summary.unrealizedPnl)}`}
           sub={`${summary.unrealizedPct > 0 ? '+' : ''}${summary.unrealizedPct.toFixed(2)}%`}
           color={unrealizedColor}
@@ -118,7 +118,7 @@ export function Portfolio() {
           }
         />
         <SummaryCard
-          label="Lãi/lỗ đã thực hiện"
+          label={t('portfolio_realized_pnl')}
           value={`${realizedPnl > 0 ? '+' : ''}${fmtMoney(realizedPnl)}`}
           color={realizedColor}
           icon={
@@ -129,7 +129,6 @@ export function Portfolio() {
         />
       </div>
 
-      {/* Chart */}
       {holdings.length > 0 && (
         <div
           className="rounded-xl border p-4"
@@ -139,23 +138,22 @@ export function Portfolio() {
         </div>
       )}
 
-      {/* Tabs */}
       <div className="flex gap-0 border-b" style={{ borderColor: '#2a2b2e' }}>
         {([
-          { id: 'holdings' as const, label: `Danh mục (${holdings.length})` },
-          { id: 'transactions' as const, label: `Lịch sử giao dịch (${transactions.length})` },
-        ] as const).map((t) => (
+          { id: 'holdings' as const, label: t('portfolio_tab_holdings', { n: String(holdings.length) }) },
+          { id: 'transactions' as const, label: t('portfolio_tab_transactions', { n: String(transactions.length) }) },
+        ] as const).map((tb) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tb.id}
+            onClick={() => setTab(tb.id)}
             className="px-4 py-2 text-sm font-medium transition-colors"
             style={{
-              color: tab === t.id ? '#fff' : '#858ca2',
-              borderBottom: tab === t.id ? '2px solid #3861fb' : '2px solid transparent',
+              color: tab === tb.id ? '#fff' : '#858ca2',
+              borderBottom: tab === tb.id ? '2px solid #3861fb' : '2px solid transparent',
               marginBottom: -1,
             }}
           >
-            {t.label}
+            {tb.label}
           </button>
         ))}
       </div>

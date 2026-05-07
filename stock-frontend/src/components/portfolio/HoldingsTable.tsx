@@ -1,3 +1,4 @@
+import { useT } from '../../contexts/I18nContext';
 import { fmtMoney, fmtPrice } from '../../lib/portfolio';
 import type { HoldingWithPrice } from '../../lib/portfolio';
 
@@ -17,10 +18,12 @@ interface Props {
 }
 
 export function HoldingsTable({ holdings, onSelectSymbol }: Props) {
+  const { t } = useT();
+
   if (holdings.length === 0) {
     return (
       <p className="text-sm text-[#858ca2] text-center py-8">
-        Chưa có cổ phiếu nào. Thêm giao dịch mua để bắt đầu.
+        {t('holdings_empty')}
       </p>
     );
   }
@@ -31,13 +34,13 @@ export function HoldingsTable({ holdings, onSelectSymbol }: Props) {
         <table className="w-full text-left">
           <thead>
             <tr className="border-b text-xs font-medium uppercase tracking-wider" style={{ borderColor: '#2a2b2e', color: '#858ca2' }}>
-              <th className="px-4 py-3">Mã</th>
-              <th className="px-4 py-3 text-right">Số CP</th>
-              <th className="px-4 py-3 text-right">Giá vốn TB</th>
-              <th className="px-4 py-3 text-right">Giá hiện tại</th>
-              <th className="px-4 py-3 text-right">Giá trị</th>
-              <th className="px-4 py-3 text-right">Lãi/lỗ</th>
-              <th className="px-4 py-3 text-right">%</th>
+              <th className="px-4 py-3">{t('holdings_col_symbol')}</th>
+              <th className="px-4 py-3 text-right">{t('holdings_col_qty')}</th>
+              <th className="px-4 py-3 text-right">{t('holdings_col_avg_cost')}</th>
+              <th className="px-4 py-3 text-right">{t('holdings_col_current_price')}</th>
+              <th className="px-4 py-3 text-right">{t('holdings_col_value')}</th>
+              <th className="px-4 py-3 text-right">{t('holdings_col_pnl')}</th>
+              <th className="px-4 py-3 text-right">{t('holdings_col_pct')}</th>
             </tr>
           </thead>
           <tbody>
