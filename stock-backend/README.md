@@ -63,11 +63,13 @@ Tất cả endpoints yêu cầu header `X-API-Key`.
 
 | Endpoint | Params | Mô tả |
 |---|---|---|
-| `GET /api/v1/stocks/list` | `source=KBS` | Toàn bộ mã niêm yết |
-| `GET /api/v1/stocks/quotes` | `symbols=ACB,VNM`, `source=KBS` | OHLCV + % biến động (tối đa 50 mã, fetch song song) |
-| `GET /api/v1/stocks/history` | `symbol`, `start`, `end`, `interval=1D`, `source=KBS` | Lịch sử giá OHLCV |
-| `GET /api/v1/stocks/company/{symbol}` | `source=KBS` | Thông tin công ty |
+| `GET /v1/stocks/list` | `source=KBS` | Toàn bộ mã niêm yết |
+| `GET /v1/stocks/quotes` | `symbols=ACB,VNM`, `source=KBS` | OHLCV + % biến động (tối đa 50 mã, fetch song song) |
+| `GET /v1/stocks/history` | `symbol`, `start`, `end`, `interval=1D`, `source=KBS` | Lịch sử giá OHLCV |
+| `GET /v1/stocks/company/{symbol}` | `source=KBS` | Thông tin công ty |
 | `GET /health` | — | Health check |
+
+> Frontend gọi qua prefix `/api` (ví dụ `/api/v1/stocks/list`), Vite dev server proxy `/api/*` → `http://localhost:8000` và bỏ prefix trước khi forward.
 
 ## Dependencies chính
 
