@@ -19,7 +19,7 @@
 ## Cấu trúc thư mục
 
 ```
-crypto-ai/
+stock-ai/
 ├── stock-backend/    # FastAPI REST API
 └── stock-frontend/   # React SPA
     └── src/
