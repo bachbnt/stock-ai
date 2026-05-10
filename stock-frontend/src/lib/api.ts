@@ -1,11 +1,12 @@
-const STOCK_API = '/api';
+const STOCK_API = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:8000/api/v1';
 const backendApiKey = (import.meta.env.VITE_BACKEND_API_KEY as string) || 'secret123';
 
 export async function stockRequest<T>(
   endpoint: string,
   params?: Record<string, string>,
 ): Promise<T> {
-  const url = new URL(`${STOCK_API}${endpoint}`, window.location.origin);
+  const base = STOCK_API.startsWith('http') ? STOCK_API : window.location.origin;
+  const url = new URL(`${STOCK_API}${endpoint}`, base);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined) url.searchParams.append(k, v);

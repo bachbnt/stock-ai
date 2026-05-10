@@ -178,8 +178,8 @@ export function StockDetail({ symbol, name, onClose }: StockDetailProps) {
                           color: COLOR_TEXT,
                           fontSize: 12,
                         }}
-                        labelFormatter={(v: string) => `${v.slice(8, 10)}/${v.slice(5, 7)}`}
-                        formatter={(value: number | string | (number | string)[]) => {
+                        labelFormatter={(v) => { const s = String(v); return `${s.slice(8, 10)}/${s.slice(5, 7)}`; }}
+                        formatter={(value) => {
                           const num = typeof value === 'number' ? value : 0;
                           return [formatVND(num), t('detail_close')];
                         }}
